@@ -1,0 +1,1790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Magnus Institute of Technology — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f8fc;
+    --white: #ffffff;
+    --border: #e8eaf0;
+    --text: #1a1d2e;
+    --muted: #7b8299;
+    --admin: #4361ee;
+    --admin-light: #eef1fd;
+    --ops: #f77f00;
+    --ops-light: #fff4e8;
+    --rd: #7b2d8b;
+    --rd-light: #f5eef8;
+    --marketing: #2ec4b6;
+    --marketing-light: #eafaf9;
+    --branding: #e63946;
+    --branding-light: #fdecea;
+    --green: #2dc653;
+    --red: #e63946;
+    --yellow: #f4a261;
+    --shadow: 0 2px 12px rgba(0,0,0,0.07);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.10);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ---- BRANCH DROPDOWN ---- */
+  .branch-wrap { position: relative; display: flex; align-items: center; gap: 8px; }
+  .branch-select-btn {
+    display: flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 8px;
+    border: 1.5px solid var(--border); background: var(--bg); cursor: pointer;
+    font-family: inherit; font-size: 13px; font-weight: 600; color: var(--text); transition: all 0.15s;
+  }
+  .branch-select-btn:hover { border-color: var(--admin); background: var(--admin-light); color: var(--admin); }
+  .branch-select-btn .branch-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--admin); flex-shrink: 0; }
+  .branch-dropdown {
+    display: none; position: absolute; top: calc(100% + 6px); left: 0; min-width: 200px;
+    background: var(--white); border: 1px solid var(--border); border-radius: 10px;
+    box-shadow: var(--shadow-lg); z-index: 300; overflow: hidden;
+  }
+  .branch-dropdown.open { display: block; }
+  .branch-option {
+    display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+    cursor: pointer; font-size: 13px; font-weight: 500; transition: background 0.12s;
+  }
+  .branch-option:hover { background: var(--bg); }
+  .branch-option.active { background: var(--admin-light); color: var(--admin); font-weight: 600; }
+  .branch-option-del {
+    margin-left: auto; background: none; border: none; cursor: pointer; color: var(--muted);
+    font-size: 13px; padding: 2px 5px; border-radius: 4px; transition: color 0.15s;
+  }
+  .branch-option-del:hover { color: var(--red); }
+  .branch-add-row {
+    display: flex; align-items: center; gap: 8px; padding: 10px 14px; cursor: pointer;
+    font-size: 13px; font-weight: 500; color: var(--admin); border-top: 1px solid var(--border);
+    transition: background 0.12s;
+  }
+  .branch-add-row:hover { background: var(--admin-light); }
+
+  /* ---- TOP BAR ---- */
+  .topbar {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-title { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+  .topbar-title span { color: var(--admin); }
+  .mode-tabs { display: flex; gap: 4px; background: var(--bg); border-radius: 8px; padding: 3px; }
+  .mode-tab {
+    padding: 5px 16px; border-radius: 6px; font-size: 13px; font-weight: 500;
+    border: none; background: none; cursor: pointer; color: var(--muted); transition: all 0.18s;
+  }
+  .mode-tab.active { background: var(--white); color: var(--text); box-shadow: var(--shadow); }
+
+  /* ---- MAIN LAYOUT ---- */
+  .main { display: flex; height: calc(100vh - 60px); overflow: hidden; }
+
+  /* ---- SIDEBAR ---- */
+  .sidebar {
+    width: 240px; min-width: 240px; background: var(--white);
+    border-right: 1px solid var(--border); overflow-y: auto; padding: 16px 0;
+  }
+  .sidebar-section { padding: 0 12px 8px; }
+  .sidebar-label { font-size: 10px; font-weight: 600; color: var(--muted); letter-spacing: 1.2px; text-transform: uppercase; padding: 8px 8px 4px; }
+  .dept-btn {
+    display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 10px;
+    border: none; background: none; cursor: pointer; border-radius: 7px; font-family: inherit;
+    font-size: 13px; font-weight: 500; color: var(--text); transition: all 0.15s; text-align: left;
+    position: relative;
+  }
+  .dept-btn:hover { background: var(--bg); }
+  .dept-del {
+    display: none; margin-left: auto; background: none; border: none; cursor: pointer;
+    color: var(--muted); font-size: 14px; padding: 1px 4px; border-radius: 4px; line-height: 1;
+    flex-shrink: 0;
+  }
+  .dept-del:hover { color: var(--red); background: #fdecea; }
+  .dept-btn:hover .dept-del { display: flex; }
+  .dept-btn.active { background: var(--admin-light); color: var(--admin); }
+  .dept-btn.active .dot { background: var(--admin); }
+  .dept-btn[data-dept="OPERATIONS"].active { background: var(--ops-light); color: var(--ops); }
+  .dept-btn[data-dept="OPERATIONS"].active .dot { background: var(--ops); }
+  .dept-btn[data-dept="R&D"].active { background: var(--rd-light); color: var(--rd); }
+  .dept-btn[data-dept="R&D"].active .dot { background: var(--rd); }
+  .dept-btn[data-dept="MARKETING"].active { background: var(--marketing-light); color: var(--marketing); }
+  .dept-btn[data-dept="MARKETING"].active .dot { background: var(--marketing); }
+  .dept-btn[data-dept="BRANDING"].active { background: var(--branding-light); color: var(--branding); }
+  .dept-btn[data-dept="BRANDING"].active .dot { background: var(--branding); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); flex-shrink: 0; }
+
+  /* ---- CONTENT ---- */
+  .content { flex: 1; overflow-y: auto; padding: 24px 28px; }
+
+  /* ---- TABS ---- */
+  .view-tabs { display: flex; gap: 4px; margin-bottom: 20px; }
+  .view-tab {
+    padding: 7px 18px; border-radius: 7px; font-size: 13px; font-weight: 500;
+    border: 1px solid var(--border); background: var(--white); cursor: pointer; color: var(--muted); transition: all 0.15s;
+  }
+  .view-tab.active { border-color: var(--admin); background: var(--admin-light); color: var(--admin); }
+
+  /* ---- KPI CARDS ---- */
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+  .kpi-card {
+    background: var(--white); border-radius: 12px; padding: 18px 20px;
+    border: 1px solid var(--border); box-shadow: var(--shadow);
+  }
+  .kpi-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+  .kpi-value { font-size: 22px; font-weight: 700; font-family: 'DM Mono', monospace; letter-spacing: -1px; }
+  .kpi-sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .kpi-card.green .kpi-value { color: var(--green); }
+  .kpi-card.red .kpi-value { color: var(--red); }
+  .kpi-card.blue .kpi-value { color: var(--admin); }
+  .kpi-card.orange .kpi-value { color: var(--ops); }
+
+  /* ---- SECTION HEADER ---- */
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .section-title { font-size: 14px; font-weight: 700; }
+  .badge {
+    padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+    background: var(--admin-light); color: var(--admin);
+  }
+
+  /* ---- TABLE ---- */
+  .table-wrap { background: var(--white); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; box-shadow: var(--shadow); margin-bottom: 20px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead tr { background: #f3f4f8; }
+  th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: 0.5px; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+  td { padding: 10px 14px; border-bottom: 1px solid #f0f1f5; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafbfd; }
+  .dept-tag {
+    display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;
+  }
+  .dept-ADMINISTRATIVE { background: var(--admin-light); color: var(--admin); }
+  .dept-OPERATIONS { background: var(--ops-light); color: var(--ops); }
+  .dept-RD { background: var(--rd-light); color: var(--rd); }
+  .dept-MARKETING { background: var(--marketing-light); color: var(--marketing); }
+  .dept-BRANDING { background: var(--branding-light); color: var(--branding); }
+
+  td input[type="number"] {
+    width: 110px; padding: 5px 9px; border: 1.5px solid var(--border); border-radius: 6px;
+    font-family: 'DM Mono', monospace; font-size: 13px; color: var(--text); background: var(--bg);
+    transition: border 0.15s; outline: none;
+  }
+  td input[type="number"]:focus { border-color: var(--admin); background: var(--white); }
+
+  .var-pos { color: var(--green); font-weight: 600; }
+  .var-neg { color: var(--red); font-weight: 600; }
+  .var-zero { color: var(--muted); }
+  .mono { font-family: 'DM Mono', monospace; }
+
+  /* ---- PROGRESS BAR ---- */
+  .progress-wrap { background: #eef0f5; border-radius: 4px; height: 5px; margin-top: 4px; width: 100px; }
+  .progress-bar { height: 5px; border-radius: 4px; background: var(--admin); transition: width 0.4s; }
+  .progress-bar.over { background: var(--red); }
+  .progress-bar.ok { background: var(--green); }
+
+  /* ---- COLLECTION TABLE ---- */
+  .collection-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .collection-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); }
+  .collection-card-header { padding: 12px 16px; background: #f3f4f8; border-bottom: 1px solid var(--border); font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: 0.5px; text-transform: uppercase; }
+
+  /* ---- WEEKLY GRID ---- */
+  .weekly-tabs { display: flex; gap: 4px; margin-bottom: 16px; }
+  .week-tab {
+    padding: 5px 14px; border-radius: 6px; font-size: 12px; font-weight: 500;
+    border: 1px solid var(--border); background: var(--white); cursor: pointer; color: var(--muted); transition: all 0.15s;
+  }
+  .week-tab.active { border-color: var(--admin); background: var(--admin-light); color: var(--admin); }
+
+  /* ---- DASHBOARD KPI SUMMARY ---- */
+  .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .dash-dept-card {
+    background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 18px;
+    box-shadow: var(--shadow);
+  }
+  .dash-dept-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .dash-dept-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dash-dept-name { font-size: 14px; font-weight: 700; }
+  .dash-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #f0f1f5; font-size: 13px; }
+  .dash-row:last-child { border-bottom: none; }
+  .dash-row-label { color: var(--muted); }
+  .dash-row-val { font-family: 'DM Mono', monospace; font-weight: 600; }
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px;
+    border-radius: 20px; font-size: 11px; font-weight: 600;
+  }
+  .status-over { background: #fdecea; color: var(--red); }
+  .status-ok { background: #e8f9ed; color: var(--green); }
+  .status-na { background: #f0f1f5; color: var(--muted); }
+
+  /* ---- EMPTY STATE ---- */
+  .empty { text-align: center; padding: 40px; color: var(--muted); font-size: 13px; }
+
+  /* ---- HEADER DIRECTOR SALARY ---- */
+  .head-salary-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; box-shadow: var(--shadow); margin-bottom: 20px; }
+  .head-salary-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 14px; }
+  .hs-item { background: var(--bg); border-radius: 8px; padding: 12px 14px; }
+  .hs-label { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .hs-input { width: 100%; border: 1.5px solid var(--border); border-radius: 6px; padding: 6px 10px; font-family: 'DM Mono', monospace; font-size: 14px; background: var(--white); outline: none; transition: border 0.15s; }
+  .hs-input:focus { border-color: var(--admin); }
+  .save-btn {
+    margin-top: 14px; padding: 8px 22px; border-radius: 8px; border: none; background: var(--admin);
+    color: #fff; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 0.15s;
+  }
+  .save-btn:hover { opacity: 0.88; }
+  .toast {
+    position: fixed; bottom: 24px; right: 24px; background: #1a1d2e; color: #fff;
+    padding: 10px 20px; border-radius: 9px; font-size: 13px; font-weight: 500;
+    z-index: 999; opacity: 0; pointer-events: none; transition: opacity 0.25s;
+  }
+  .toast.show { opacity: 1; }
+
+  /* ---- ADD DEPT BUTTON ---- */
+  .add-dept-btn {
+    display: flex; align-items: center; gap: 8px; width: calc(100% - 24px); margin: 4px 12px;
+    padding: 8px 10px; border: 1.5px dashed var(--border); border-radius: 7px;
+    background: none; cursor: pointer; font-family: inherit; font-size: 13px;
+    font-weight: 500; color: var(--muted); transition: all 0.15s;
+  }
+  .add-dept-btn:hover { border-color: var(--admin); color: var(--admin); background: var(--admin-light); }
+
+  /* ---- MODAL ---- */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(26,29,46,0.45); z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .modal {
+    background: var(--white); border-radius: 14px; padding: 28px 28px 24px;
+    width: 480px; max-width: 95vw; box-shadow: var(--shadow-lg);
+    max-height: 85vh; display: flex; flex-direction: column;
+  }
+  .modal-title { font-size: 15px; font-weight: 700; margin-bottom: 18px; }
+  .modal-body { overflow-y: auto; flex: 1; }
+  .modal-field { margin-bottom: 14px; }
+  .modal-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 5px; }
+  .modal-input {
+    width: 100%; padding: 8px 11px; border: 1.5px solid var(--border); border-radius: 7px;
+    font-family: inherit; font-size: 13px; outline: none; transition: border 0.15s;
+  }
+  .modal-input:focus { border-color: var(--admin); }
+  .modal-row-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+  .modal-row-item { display: flex; gap: 8px; align-items: center; }
+  .modal-row-item input { flex: 1; padding: 7px 10px; border: 1.5px solid var(--border); border-radius: 6px; font-family: inherit; font-size: 13px; outline: none; transition: border 0.15s; }
+  .modal-row-item input:focus { border-color: var(--admin); }
+  .modal-row-del { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 16px; padding: 2px 5px; border-radius: 4px; transition: color 0.15s; }
+  .modal-row-del:hover { color: var(--red); }
+  .modal-add-row { background: none; border: 1.5px dashed var(--border); border-radius: 6px; padding: 6px 12px; font-family: inherit; font-size: 12px; color: var(--muted); cursor: pointer; width: 100%; transition: all 0.15s; }
+  .modal-add-row:hover { border-color: var(--admin); color: var(--admin); }
+  .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); }
+  .modal-cancel { padding: 8px 18px; border-radius: 7px; border: 1px solid var(--border); background: none; font-family: inherit; font-size: 13px; cursor: pointer; color: var(--muted); }
+  .modal-cancel:hover { background: var(--bg); }
+  .modal-save { padding: 8px 22px; border-radius: 7px; border: none; background: var(--admin); color: #fff; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
+  .modal-save:hover { opacity: 0.88; }
+  .color-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .color-swatch { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: border 0.15s; }
+  .color-swatch.selected { border-color: var(--text); }
+
+  /* ---- BREAKDOWN MODAL ---- */
+  .bkd-overlay {
+    position: fixed; inset: 0; background: rgba(26,29,46,0.55); z-index: 200;
+    display: flex; align-items: center; justify-content: center; padding: 24px;
+  }
+  .bkd-modal {
+    background: var(--white); border-radius: 18px; width: 100%; max-width: 860px;
+    max-height: 92vh; display: flex; flex-direction: column; box-shadow: 0 24px 64px rgba(0,0,0,0.18);
+    overflow: hidden;
+  }
+  .bkd-header {
+    padding: 28px 32px 20px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; justify-content: space-between; flex-shrink: 0;
+  }
+  .bkd-header-left { display: flex; flex-direction: column; gap: 4px; }
+  .bkd-dept-name { font-size: 22px; font-weight: 700; letter-spacing: -0.4px; }
+  .bkd-subtitle { font-size: 13px; color: var(--muted); font-weight: 400; }
+  .bkd-close {
+    background: var(--bg); border: none; border-radius: 8px; width: 36px; height: 36px;
+    font-size: 18px; cursor: pointer; color: var(--muted); display: flex; align-items: center;
+    justify-content: center; transition: all 0.15s; flex-shrink: 0;
+  }
+  .bkd-close:hover { background: #fdecea; color: var(--red); }
+  .bkd-kpis { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; padding: 24px 32px; flex-shrink: 0; border-bottom: 1px solid var(--border); }
+  .bkd-kpi { background: var(--bg); border-radius: 12px; padding: 16px 20px; }
+  .bkd-kpi-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+  .bkd-kpi-val { font-size: 20px; font-weight: 700; font-family: 'DM Mono', monospace; letter-spacing: -0.5px; }
+  .bkd-body { overflow-y: auto; flex: 1; padding: 0 32px 24px; }
+  .bkd-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+  .bkd-table th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: 0.5px; text-transform: uppercase; border-bottom: 2px solid var(--border); }
+  .bkd-table td { padding: 14px 14px; border-bottom: 1px solid #f0f1f5; vertical-align: middle; font-size: 14px; }
+  .bkd-table tr:last-child td { border-bottom: none; }
+  .bkd-table tr:hover td { background: #fafbfd; }
+  .bkd-table tfoot td { background: #f3f4f8; font-weight: 700; font-size: 13px; border-top: 2px solid var(--border); }
+  .bkd-bar-cell { width: 180px; }
+  .bkd-bar-track { background: #eef0f5; border-radius: 6px; height: 8px; }
+  .bkd-bar-fill { height: 8px; border-radius: 6px; transition: width 0.5s; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #d0d3de; border-radius: 10px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:14px">
+    <div class="topbar-title"><span>Magnus</span> Institute of Technology</div>
+    <div class="branch-wrap" id="branchWrap">
+      <button class="branch-select-btn" onclick="toggleBranchDropdown()" id="branchBtn">
+        <span class="branch-dot" id="branchDot"></span>
+        <span id="branchBtnLabel">Manjeri</span>
+        <span style="font-size:10px;color:var(--muted)">▾</span>
+      </button>
+      <div class="branch-dropdown" id="branchDropdown"></div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <a href="index.html" style="padding:6px 13px;border-radius:7px;border:1px solid var(--border);background:none;font-family:inherit;font-size:13px;cursor:pointer;color:var(--muted);text-decoration:none" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='none'">← Branches</a>
+    <div class="mode-tabs">
+      <button class="mode-tab active" onclick="setMode('monthly')">Monthly</button>
+      <button class="mode-tab" onclick="setMode('weekly')">Weekly</button>
+    </div>
+    <button id="signOutBtn" style="padding:6px 14px;border-radius:7px;border:1px solid var(--border);background:none;font-family:inherit;font-size:13px;cursor:pointer;color:var(--muted)" onmouseover="this.style.background='#fdecea';this.style.color='var(--red)'" onmouseout="this.style.background='none';this.style.color='var(--muted)'">Sign Out</button>
+  </div>
+</div>
+
+<div class="main">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Views</div>
+      <button class="dept-btn active" data-dept="DASHBOARD" onclick="selectDept('DASHBOARD')">
+        <span class="dot" style="background:#4361ee"></span> Dashboard
+      </button>
+    </div>
+    <div class="sidebar-section" id="dept-sidebar-section">
+      <div class="sidebar-label">Departments</div>
+    </div>
+    <button class="add-dept-btn" onclick="openAddDeptModal()">＋ Add Department</button>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Other</div>
+      <button class="dept-btn" data-dept="COLLECTION" onclick="selectDept('COLLECTION')">
+        <span class="dot" style="background:#2dc653"></span> Collection Analysis
+      </button>
+
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content" id="content"></div>
+</div>
+
+<div class="toast" id="toast">✓ Saved</div>
+
+<!-- BREAKDOWN MODAL -->
+<div class="bkd-overlay" id="breakdownModal" style="display:none" onclick="if(event.target===this)document.getElementById('breakdownModal').style.display='none'">
+  <div class="bkd-modal">
+    <div class="bkd-header">
+      <div class="bkd-header-left">
+        <div class="bkd-dept-name" id="breakdownTitle"></div>
+        <div class="bkd-subtitle" id="breakdownSubtitle"></div>
+      </div>
+      <button class="bkd-close" onclick="document.getElementById('breakdownModal').style.display='none'">✕</button>
+    </div>
+    <div class="bkd-kpis" id="breakdownKpis"></div>
+    <div class="bkd-body" id="breakdownBody"></div>
+  </div>
+</div>
+
+<!-- ADD BRANCH MODAL -->
+<div class="modal-overlay" id="addBranchModal" style="display:none" onclick="if(event.target===this)closeAddBranchModal()">
+  <div class="modal" style="width:360px">
+    <div class="modal-title">Add New Branch</div>
+    <div class="modal-body">
+      <div class="modal-field">
+        <div class="modal-label">Branch Name</div>
+        <input class="modal-input" id="newBranchName" type="text" placeholder="e.g. South Campus" onkeydown="if(event.key==='Enter')saveNewBranch()" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-cancel" onclick="closeAddBranchModal()">Cancel</button>
+      <button class="modal-save" onclick="saveNewBranch()">Add Branch</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT FIELD MODAL -->
+<div class="modal-overlay" id="editFieldModal" style="display:none" onclick="if(event.target===this)closeEditFieldModal()">
+  <div class="modal" style="width:360px">
+    <div class="modal-title">Edit Field</div>
+    <div class="modal-body">
+      <div class="modal-field">
+        <div class="modal-label">Category</div>
+        <input class="modal-input" id="editFieldCat" type="text" onkeydown="if(event.key==='Enter')document.getElementById('editFieldSub').focus()" />
+      </div>
+      <div class="modal-field">
+        <div class="modal-label">Sub-category</div>
+        <input class="modal-input" id="editFieldSub" type="text" onkeydown="if(event.key==='Enter')saveEditField()" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-cancel" onclick="closeEditFieldModal()">Cancel</button>
+      <button class="modal-save" onclick="saveEditField()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- RENAME DEPT MODAL -->
+<div class="modal-overlay" id="renameDeptModal" style="display:none" onclick="if(event.target===this)closeRenameDeptModal()">
+  <div class="modal" style="width:360px">
+    <div class="modal-title">Rename Department</div>
+    <div class="modal-body">
+      <div class="modal-field">
+        <div class="modal-label">Department Name</div>
+        <input class="modal-input" id="renameDeptInput" type="text" onkeydown="if(event.key==='Enter')saveRenameDept()" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-cancel" onclick="closeRenameDeptModal()">Cancel</button>
+      <button class="modal-save" onclick="saveRenameDept()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD FIELD MODAL -->
+<div class="modal-overlay" id="addFieldModal" style="display:none" onclick="if(event.target===this)closeAddFieldModal()">
+  <div class="modal" style="width:360px">
+    <div class="modal-title">Add Field</div>
+    <div class="modal-body">
+      <div class="modal-field">
+        <div class="modal-label">Category</div>
+        <input class="modal-input" id="addFieldCat" type="text" placeholder="e.g. Salary" onkeydown="if(event.key==='Enter')document.getElementById('addFieldSub').focus()" />
+      </div>
+      <div class="modal-field">
+        <div class="modal-label">Sub-category</div>
+        <input class="modal-input" id="addFieldSub" type="text" placeholder="e.g. Manager" onkeydown="if(event.key==='Enter')saveAddField()" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-cancel" onclick="closeAddFieldModal()">Cancel</button>
+      <button class="modal-save" onclick="saveAddField()">Add Field</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD DEPARTMENT MODAL -->
+<div class="modal-overlay" id="addDeptModal" style="display:none" onclick="if(event.target===this)closeAddDeptModal()">
+  <div class="modal">
+    <div class="modal-title">Add New Department</div>
+    <div class="modal-body">
+      <div class="modal-field">
+        <div class="modal-label">Department Name</div>
+        <input class="modal-input" id="newDeptName" type="text" placeholder="e.g. FINANCE" />
+      </div>
+      <div class="modal-field">
+        <div class="modal-label">Color</div>
+        <div class="color-row" id="colorSwatches"></div>
+      </div>
+      <div class="modal-field">
+        <div class="modal-label">Rows (Category / Sub-category)</div>
+        <div class="modal-row-list" id="newDeptRows"></div>
+        <button class="modal-add-row" onclick="addDeptRow()">＋ Add Row</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-cancel" onclick="closeAddDeptModal()">Cancel</button>
+      <button class="modal-save" onclick="saveNewDept()">Save Department</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// SUPABASE INIT + AUTH
+// ============================================================
+const _sbScript = document.createElement('script');
+_sbScript.type = 'module';
+_sbScript.textContent = `
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+  window.SB = createClient(
+    'https://jcckxekjaetwoeilptse.supabase.co',
+    'sb_publishable_20hUKqtjjIPDgdAreDsBTQ_yalRVevL',
+    { auth: { persistSession: true, storageKey: 'magnus-auth', storage: window.localStorage } }
+  );
+  const { data: { session } } = await SB.auth.getSession();
+  if (!session) { window.location.href = 'login.html'; }
+  else {
+    const { data: profile } = await SB.from('profiles').select('role').eq('id', session.user.id).single();
+    if (!profile || profile.role !== 'admin') { window.location.href = 'login.html'; }
+    else { window.dispatchEvent(new Event('sb-ready')); }
+  }
+`;
+document.head.appendChild(_sbScript);
+
+window.addEventListener('sb-ready', async () => {
+  document.getElementById('signOutBtn').onclick = async () => {
+    await SB.auth.signOut(); window.location.href = 'login.html';
+  };
+  // Seed all branches to Supabase on first load
+  await seedAllBranchesToDB();
+  // Load initial branch data from Supabase
+  await loadBranchFromDB(currentBranch);
+  renderSidebar();
+  render();
+});
+
+// ============================================================
+// SUPABASE DATA FUNCTIONS
+// ============================================================
+async function seedAllBranchesToDB() {
+  // Get all already-seeded branch names
+  const { data: existingDepts } = await SB.from('departments').select('branch_name,name');
+  const seededMap = {};
+  (existingDepts || []).forEach(d => {
+    if (!seededMap[d.branch_name]) seededMap[d.branch_name] = new Set();
+    seededMap[d.branch_name].add(d.name);
+  });
+
+  const allDepts = [];
+  const allFields = [];
+
+  for (const branch of BRANCH_NAMES) {
+    const bd = branchData[branch];
+    if (!bd || !bd.DEPTS.length) continue;
+    const already = seededMap[branch] || new Set();
+    bd.DEPTS.forEach(d => {
+      if (already.has(d)) return; // skip already saved dept
+      allDepts.push({ branch_name: branch, name: d, color: bd.DEPT_COLORS[d] });
+      (bd.ROWS[d] || []).forEach(([cat, sub], i) => {
+        allFields.push({ branch_name: branch, dept_name: d, category: cat, subcategory: sub, sort_order: i });
+      });
+    });
+  }
+
+  if (!allDepts.length) return; // nothing to seed
+
+  for (let i = 0; i < allDepts.length; i += 500)
+    await SB.from('departments').insert(allDepts.slice(i, i + 500));
+  for (let i = 0; i < allFields.length; i += 500)
+    await SB.from('fields').insert(allFields.slice(i, i + 500));
+
+  showToast('Branches seeded to Supabase');
+}
+
+async function loadBranchFromDB(branch) {
+  if (!window.SB) return;
+  const bd = branchData[branch];
+
+  // Always reset before loading fresh from Supabase
+  bd.DEPTS.length = 0;
+  Object.keys(bd.DEPT_COLORS).forEach(k => delete bd.DEPT_COLORS[k]);
+  Object.keys(bd.ROWS).forEach(k => delete bd.ROWS[k]);
+
+  // Load departments
+  const { data: depts } = await SB.from('departments').select('name,color').eq('branch_name', branch);
+  if (depts && depts.length) {
+    bd.DEPTS.length = 0;
+    depts.forEach(d => {
+      bd.DEPTS.push(d.name);
+      bd.DEPT_COLORS[d.name] = d.color;
+    });
+  } else if (bd.DEPTS.length) {
+    // Seed default departments and fields into Supabase
+    for (const d of bd.DEPTS) {
+      await SB.from('departments').upsert(
+        { branch_name: branch, name: d, color: bd.DEPT_COLORS[d] },
+        { onConflict: 'branch_name,name' }
+      );
+      const fieldRows = (bd.ROWS[d] || []).map(([cat, sub], i) => ({
+        branch_name: branch, dept_name: d, category: cat, subcategory: sub, sort_order: i
+      }));
+      if (fieldRows.length) {
+        await SB.from('fields').insert(fieldRows).catch(() => {});
+      }
+    }
+  }
+
+  // Load fields
+  const { data: fields } = await SB.from('fields').select('dept_name,category,subcategory').eq('branch_name', branch).order('sort_order').order('id');
+  if (fields) {
+    bd.DEPTS.forEach(d => { bd.ROWS[d] = []; });
+    fields.forEach(f => {
+      if (!bd.ROWS[f.dept_name]) bd.ROWS[f.dept_name] = [];
+      bd.ROWS[f.dept_name].push([f.category, f.subcategory]);
+    });
+  }
+
+  // Load budget
+  const { data: budgets } = await SB.from('budget_data').select('dept_name,field_key,period,value').eq('branch_name', branch);
+  bd.store.budget = {};
+  bd.DEPTS.forEach(d => { bd.store.budget[d] = {}; });
+  (budgets||[]).forEach(r => {
+    if (!bd.store.budget[r.dept_name]) bd.store.budget[r.dept_name] = {};
+    if (!bd.store.budget[r.dept_name][r.field_key]) bd.store.budget[r.dept_name][r.field_key] = {monthly:0,w1:0,w2:0,w3:0,w4:0};
+    bd.store.budget[r.dept_name][r.field_key][r.period] = Number(r.value);
+  });
+
+  // Load actuals
+  const { data: actuals } = await SB.from('actual_data').select('dept_name,field_key,period,value').eq('branch_name', branch);
+  bd.store.actual = {};
+  bd.DEPTS.forEach(d => { bd.store.actual[d] = {}; });
+  (actuals||[]).forEach(r => {
+    if (!bd.store.actual[r.dept_name]) bd.store.actual[r.dept_name] = {};
+    if (!bd.store.actual[r.dept_name][r.field_key]) bd.store.actual[r.dept_name][r.field_key] = {monthly:0,w1:0,w2:0,w3:0,w4:0};
+    bd.store.actual[r.dept_name][r.field_key][r.period] = Number(r.value);
+  });
+
+  // Load collection
+  const { data: coll } = await SB.from('collection_data').select('period,source,target,actual').eq('branch_name', branch);
+  (coll||[]).forEach(r => {
+    if (bd.store.collection[r.period] && bd.store.collection[r.period][r.source]) {
+      bd.store.collection[r.period][r.source].target = Number(r.target);
+      bd.store.collection[r.period][r.source].actual = Number(r.actual);
+    }
+  });
+
+  getBranchProxy();
+}
+
+async function saveValToDB(type, dept, key, period, val) {
+  if (!window.SB) { console.error('SB not ready'); return; }
+  const table = type === 'budget' ? 'budget_data' : 'actual_data';
+  const payload = { branch_name: currentBranch, dept_name: dept, field_key: key, period, value: val, updated_at: new Date().toISOString() };
+  console.log('saveValToDB:', table, payload);
+  const { data, error } = await SB.from(table).upsert(payload, { onConflict: 'branch_name,dept_name,field_key,period' }).select();
+  console.log('result:', data, error);
+}
+
+async function saveCollectionToDB(period, source, target, actual) {
+  if (!window.SB) return;
+  await SB.from('collection_data').upsert(
+    { branch_name: currentBranch, period, source, target, actual, updated_at: new Date().toISOString() },
+    { onConflict: 'branch_name,period,source' }
+  );
+}
+
+async function saveDeptToDB(dept, color) {
+  if (!window.SB) return;
+  await SB.from('departments').upsert(
+    { branch_name: currentBranch, name: dept, color },
+    { onConflict: 'branch_name,name' }
+  );
+}
+
+async function saveFieldToDB(dept, cat, sub) {
+  if (!window.SB) return;
+  await SB.from('fields').insert({ branch_name: currentBranch, dept_name: dept, category: cat, subcategory: sub });
+}
+
+// ============================================================
+// DATA STORE
+// ============================================================
+const DEPTS = ['ADMINISTRATIVE','OPERATIONS','R&D','MARKETING','BRANDING'];
+const DEPT_COLORS = {
+  ADMINISTRATIVE: '#4361ee', OPERATIONS: '#f77f00',
+  'R&D': '#7b2d8b', MARKETING: '#2ec4b6', BRANDING: '#e63946'
+};
+
+const ROWS = {
+  ADMINISTRATIVE: [
+    ['Salary','Faculty'],['Salary','SCM'],['Salary','Office Staff'],['Salary','Receptionist'],
+    ['Recruitment','Hiring Cost'],['Travel & Allowance','Food'],['Travel & Allowance','Travel'],
+    ['Office','Office Rent'],['Hostel','Hostel Rent'],['Office','Electricity'],
+    ['Hostel','Hostel Electricity'],['Office','MobileRecharges'],['Office','Internet'],
+    ['Office','Refreshment'],['Office','Stationery'],['Office','Software Subscriptions'],
+    ['Office','Maintenance & Repairs'],['Hostel','Maintenance & Repairs'],
+    ['Office','Cleaning'],['Hostel','Cleaning'],['Office','Water Supply'],
+    ['Hostel','Water Supply'],['Hostel','Food & Mess'],['Hostel','Warden Salary'],
+    ['Hostel','Security'],['Hostel','Housekeeping'],['Infrastructure','Classroom Setup'],
+    ['Student Kit','SMT'],['Student Kit','CMT'],['Student Kit','Trouble shooting']
+  ],
+  OPERATIONS: [
+    ['Student Kit','Tool&Spare'],['Logistics','Courier – Tool Kit'],
+    ['Research','Tools & Software'],['Training','Workshops'],
+    ['Recruitment','Hiring Cost'],['Travel & Allowance','Food'],['Travel & Allowance','Travel']
+  ],
+  'R&D': [
+    ['Salary','R&D staff'],['Advertising','Digital Ads'],['Campaigns','Lead Generation'],
+    ['Events','Seminars/Webinars'],['Recruitment','Hiring Cost'],
+    ['Travel & Allowance','Food'],['Travel & Allowance','Travel']
+  ],
+  MARKETING: [
+    ['Salary','offline Marketing staff'],['Salary','online Marketing staff'],
+    ['Design','Creatives'],['Media','Video Production'],['Promotion','Brand Promotion'],
+    ['Recruitment','Hiring Cost'],['Travel & Allowance','Food'],['Travel & Allowance','Travel']
+  ],
+  BRANDING: [
+    ['Salary','Offline branding staff'],['Salary','Online branding staff'],
+    ['Recruitment','Hiring Cost'],['Travel & Allowance','Food'],['Travel & Allowance','Travel']
+  ]
+};
+
+// Storage: budget[dept][cat][sub][mode] = value
+// mode: 'monthly' | 'w1' | 'w2' | 'w3' | 'w4'
+// actual[dept][cat][sub][mode] = value
+const store = {
+  budget: {}, actual: {},
+  collection: { monthly: {SMT:{target:0,actual:0}, CMT:{target:0,actual:0}},
+    w1:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}},
+    w2:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}},
+    w3:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}},
+    w4:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}}},
+  headSalary: { monthly:0, w1:0, w2:0, w3:0, w4:0 },
+  directorWithdrawal: { monthly:0, w1:0, w2:0, w3:0, w4:0 },
+  cashBalance: { monthly:0, w1:0, w2:0, w3:0, w4:0 }
+};
+
+// Init store
+DEPTS.forEach(d => {
+  store.budget[d] = {}; store.actual[d] = {};
+  (ROWS[d]||[]).forEach(([cat,sub]) => {
+    const k = cat+'__'+sub;
+    if (!store.budget[d][k]) store.budget[d][k] = {monthly:0,w1:0,w2:0,w3:0,w4:0};
+    if (!store.actual[d][k]) store.actual[d][k] = {monthly:0,w1:0,w2:0,w3:0,w4:0};
+  });
+});
+
+// ============================================================
+// STATE
+// ============================================================
+let currentMode = 'monthly';
+let currentDept = 'DASHBOARD';
+let currentWeek = 'w1';
+let currentView = 'budget'; // budget | actual | variance
+const deptCatFilter = {}; // dept -> selected category or ''
+const deptSort = {};       // dept -> { col: 'budget'|'actual'|'variance'|'category'|'subcategory'|'', dir: 1|-1 }
+
+// ============================================================
+// HELPERS
+// ============================================================
+function fmt(n) {
+  if (!n && n!==0) return '—';
+  return '₹' + Number(n).toLocaleString('en-IN');
+}
+function fmtVar(v) {
+  if (v === 0) return '<span class="var-zero mono">—</span>';
+  if (v > 0) return `<span class="var-pos mono">+${fmt(v)}</span>`;
+  return `<span class="var-neg mono">${fmt(v)}</span>`;
+}
+function pct(a,b) { return b ? Math.round((a/b)*100) : 0; }
+function deptClass(d) { return 'dept-'+(d||'').replace(/[^A-Z]/g,''); }
+function deptColor(d) { return DEPT_COLORS[d]||'#aaa'; }
+function getKey(cat,sub){ return cat+'__'+sub; }
+
+function setVal(obj, dept, key, mode, val){
+  if(!obj[dept]) obj[dept]={};
+  if(!obj[dept][key]) obj[dept][key]={monthly:0,w1:0,w2:0,w3:0,w4:0};
+  obj[dept][key][mode] = val;
+}
+function setBudget(dept, key, mode, val){
+  setVal(window.store.budget, dept, key, mode, val);
+  saveValToDB('budget', dept, key, mode, val);
+}
+function setActual(dept, key, mode, val){
+  setVal(window.store.actual, dept, key, mode, val);
+  saveValToDB('actual', dept, key, mode, val);
+}
+function getVal(obj, dept, key, mode){
+  return (obj[dept]&&obj[dept][key]&&obj[dept][key][mode]) ? Number(obj[dept][key][mode]) : 0;
+}
+
+function deptTotal(obj, dept, mode){
+  return (window.ROWS[dept]||[]).reduce((s,[cat,sub])=>{
+    return s + getVal(obj, dept, getKey(cat,sub), mode);
+  },0);
+}
+
+function showToast(msg='Saved'){
+  const t = document.getElementById('toast');
+  t.textContent = '✓ ' + msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),1800);
+}
+
+// ============================================================
+// MODE / DEPT
+// ============================================================
+function setMode(m){
+  currentMode = m;
+  document.querySelectorAll('.mode-tab').forEach(t=>t.classList.toggle('active', t.textContent.toLowerCase()===m));
+  render();
+}
+function selectDept(d){
+  currentDept = d;
+  document.querySelectorAll('.dept-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.dept===d);
+  });
+  render();
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function render(){
+  const el = document.getElementById('content');
+  if(currentDept==='DASHBOARD') { el.innerHTML = renderDashboard(); return; }
+  if(currentDept==='COLLECTION') { el.innerHTML = renderCollection(); return; }
+el.innerHTML = renderDept(currentDept);
+}
+
+// ============================================================
+// DEPT VIEW
+// ============================================================
+function renderDept(dept){
+  const weeks = ['w1','w2','w3','w4'];
+  const weekLabels = {w1:'Week 1',w2:'Week 2',w3:'Week 3',w4:'Week 4'};
+  const rows = ROWS[dept]||[];
+  const color = deptColor(dept);
+  const cats = [...new Set(rows.map(([c])=>c))];
+  const activeCat = deptCatFilter[dept] || '';
+  const filteredRows = activeCat ? rows.filter(([c])=>c===activeCat) : rows;
+  const sort = deptSort[dept] || {col:'',dir:1};
+  const sortedRows = [...filteredRows].sort((a,b)=>{
+    if(!sort.col) return 0;
+    if(sort.col==='category')   return a[0].localeCompare(b[0])*sort.dir;
+    if(sort.col==='subcategory') return a[1].localeCompare(b[1])*sort.dir;
+    const mode = currentMode==='monthly'?'monthly':currentWeek;
+    if(sort.col==='budget')  return (getVal(store.budget,dept,getKey(a[0],a[1]),mode)-getVal(store.budget,dept,getKey(b[0],b[1]),mode))*sort.dir;
+    if(sort.col==='actual')  return (getVal(store.actual,dept,getKey(a[0],a[1]),mode)-getVal(store.actual,dept,getKey(b[0],b[1]),mode))*sort.dir;
+    if(sort.col==='variance'){
+      const va=(getVal(store.budget,dept,getKey(a[0],a[1]),mode)-getVal(store.actual,dept,getKey(a[0],a[1]),mode));
+      const vb=(getVal(store.budget,dept,getKey(b[0],b[1]),mode)-getVal(store.actual,dept,getKey(b[0],b[1]),mode));
+      return (va-vb)*sort.dir;
+    }
+    return 0;
+  });
+
+  const budgetTotal = (activeCat ? filteredRows : rows).reduce((s,[cat,sub])=>s+getVal(window.store.budget,dept,getKey(cat,sub),currentMode==='monthly'?'monthly':currentWeek),0);
+  const actualTotal = (activeCat ? filteredRows : rows).reduce((s,[cat,sub])=>s+getVal(window.store.actual,dept,getKey(cat,sub),currentMode==='monthly'?'monthly':currentWeek),0);
+  const variance = budgetTotal - actualTotal;
+
+  let weekTabsHtml = '';
+  if(currentMode==='weekly'){
+    weekTabsHtml = `<div class="weekly-tabs">
+      ${weeks.map(w=>`<button class="week-tab ${currentWeek===w?'active':''}" onclick="currentWeek='${w}';render()">${weekLabels[w]}</button>`).join('')}
+    </div>`;
+  }
+
+  const viewMode = currentMode==='monthly' ? 'monthly' : currentWeek;
+
+  const tableRows = sortedRows.map(([cat,sub])=>{
+    const k = getKey(cat,sub);
+    const b = getVal(window.store.budget, dept, k, viewMode);
+    const a = getVal(window.store.actual, dept, k, viewMode);
+    const v = b - a;
+    const p = pct(a,b);
+    const barClass = p>100?'over':p>=80?'':'ok';
+    const safeD = dept.replace(/'/g,"\\'");
+    const safeC = cat.replace(/'/g,"\\'");
+    const safeS = sub.replace(/'/g,"\\'");
+    const inputOrVal = (val, type) => activeCat
+      ? `<span class="mono" style="font-size:13px">${val ? fmt(val) : '—'}</span>`
+      : `<input type="number" min="0" value="${val||''}" placeholder="0" onchange="setVal(store.${type},\'${safeD}\',\'${k}\',\'${viewMode}\',+this.value);render()" />`;
+    return `<tr>
+      <td><span style="color:${color};font-weight:600;font-size:12px">${cat}</span></td>
+      <td>${sub}</td>
+      <td>${activeCat ? `<span class="mono">${fmt(b)}</span>` : `<input type="number" min="0" value="${b||''}" placeholder="0" onchange="setBudget('${dept}','${k}','${viewMode}',+this.value);render()" />`}</td>
+      <td>${activeCat ? `<span class="mono">${fmt(a)}</span>` : `<input type="number" min="0" value="${a||''}" placeholder="0" onchange="setActual('${dept}','${k}','${viewMode}',+this.value);render()" />`}</td>
+      <td>${fmtVar(v)}</td>
+      <td>
+        <div style="font-size:12px;color:var(--muted)">${b?p+'%':'—'}</div>
+        ${b?`<div class="progress-wrap"><div class="progress-bar ${barClass}" style="width:${Math.min(p,100)}%"></div></div>`:''}
+      </td>
+      <td>${activeCat ? '' : `
+        <span onclick="editField('${safeD}','${safeC}','${safeS}')" title="Edit row" style="cursor:pointer;color:var(--muted);font-size:13px;padding:2px 6px;border-radius:4px" onmouseover="this.style.color='var(--admin)'" onmouseout="this.style.color='var(--muted)'">✎</span>
+        <span onclick="removeField('${safeD}','${safeC}','${safeS}')" title="Remove row" style="cursor:pointer;color:var(--muted);font-size:13px;padding:2px 6px;border-radius:4px" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</span>
+      `}</td>
+    </tr>`;
+  }).join('');
+
+  return `
+    <div class="kpi-row">
+      <div class="kpi-card blue">
+        <div class="kpi-label">Total Budget</div>
+        <div class="kpi-value">${fmt(budgetTotal)}</div>
+        <div class="kpi-sub">${currentMode==='monthly'?'Monthly':'Weekly'} target</div>
+      </div>
+      <div class="kpi-card ${actualTotal>budgetTotal?'red':'green'}">
+        <div class="kpi-label">Actual Spend</div>
+        <div class="kpi-value">${fmt(actualTotal)}</div>
+        <div class="kpi-sub">${pct(actualTotal,budgetTotal)}% of budget</div>
+      </div>
+      <div class="kpi-card ${variance<0?'red':'green'}">
+        <div class="kpi-label">Variance</div>
+        <div class="kpi-value">${fmt(Math.abs(variance))}</div>
+        <div class="kpi-sub">${variance>=0?'Under budget':'Over budget'}</div>
+      </div>
+      <div class="kpi-card orange">
+        <div class="kpi-label">Line Items</div>
+        <div class="kpi-value">${rows.length}</div>
+        <div class="kpi-sub">${rows.filter(([c,s])=>getVal(store.actual,dept,getKey(c,s),viewMode)>0).length} entered</div>
+      </div>
+    </div>
+
+    ${weekTabsHtml}
+
+    <div class="section-header">
+      <div class="section-title" style="color:${color}">${dept}</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <select onchange="deptCatFilter['${dept}']=this.value;render()"
+          style="padding:5px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:inherit;font-size:12px;color:var(--text);background:var(--white);outline:none;cursor:pointer">
+          <option value="">All Categories</option>
+          ${cats.map(c=>`<option value="${c}" ${activeCat===c?'selected':''}>${c}</option>`).join('')}
+        </select>
+        <span class="badge" style="background:${color}18;color:${color}">${currentMode==='monthly'?'Monthly':'Weekly – '+weekLabels[currentWeek]}</span>
+        <button onclick="deleteDept('${dept.replace(/'/g,"\\'")}')"
+          style="padding:4px 12px;border-radius:6px;border:1px solid #fdecea;background:#fdecea;color:var(--red);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;">🗑 Delete</button>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+      <button onclick="clearDeptData('${dept.replace(/'/g,"\\'")}')" style="display:flex;align-items:center;gap:5px;padding:6px 14px;border-radius:7px;border:1px solid #fdecea;background:#fdecea;color:var(--red);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">🗑 Clear Data</button>
+      <span style="width:1px;height:20px;background:var(--border);margin:0 2px"></span>
+      <span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px">Sort:</span>
+      ${[['','Default'],['category','Category'],['subcategory','Sub-category'],['budget','Budget'],['actual','Actual'],['variance','Variance']].map(([col,label])=>{
+        const active = sort.col===col;
+        const arrow = (!col||!active) ? '' : (sort.dir===-1?' ↓':' ↑');
+        return `<button onclick="toggleSort('${dept.replace(/'/g,"\\'")}','${col}')" style="padding:6px 13px;border-radius:7px;border:1px solid ${active?color:'var(--border)'};background:${active?color+'18':'var(--white)'};color:${active?color:'var(--muted)'};font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s">${label}${arrow}</button>`;
+      }).join('')}
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Category</th><th>Sub Category</th>
+            <th>Budget (₹)</th><th>Actual (₹)</th>
+            <th>Variance</th><th>Utilisation</th><th></th>
+          </tr>
+        </thead>
+        <tbody>${tableRows}</tbody>
+        <tfoot>
+          <tr style="background:#f3f4f8;font-weight:700">
+            <td colspan="2" style="font-size:13px;font-weight:700">TOTAL</td>
+            <td class="mono">${fmt(budgetTotal)}</td>
+            <td class="mono">${fmt(actualTotal)}</td>
+            <td>${fmtVar(variance)}</td>
+            <td style="font-size:13px;font-weight:600">${pct(actualTotal,budgetTotal)}%</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    ${activeCat ? '' : `<button onclick="openAddFieldModal('${dept.replace(/'/g,"\\'")}')"
+      style="display:flex;align-items:center;gap:6px;padding:8px 16px;border:1.5px dashed var(--border);border-radius:8px;background:none;font-family:inherit;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;margin-bottom:20px;transition:all 0.15s"
+      onmouseover="this.style.borderColor='${color}';this.style.color='${color}';this.style.background='${color}18'"
+      onmouseout="this.style.borderColor='';this.style.color='';this.style.background=''">
+      ＋ Add Field
+    </button>`}
+  `;
+}
+
+// ============================================================
+// DASHBOARD VIEW
+// ============================================================
+function renderDashboard(){
+  const mode = currentMode==='monthly' ? 'monthly' : currentWeek;
+  const weeks = ['w1','w2','w3','w4'];
+  const weekLabels = {w1:'Week 1',w2:'Week 2',w3:'Week 3',w4:'Week 4'};
+
+  let totalBudget=0, totalActual=0;
+  DEPTS.forEach(d=>{
+    totalBudget += deptTotal(window.store.budget, d, mode);
+    totalActual += deptTotal(window.store.actual, d, mode);
+  });
+  const totalVar = totalBudget - totalActual;
+
+  let weekTabsHtml = '';
+  if(currentMode==='weekly'){
+    weekTabsHtml = `<div class="weekly-tabs">
+      ${weeks.map(w=>`<button class="week-tab ${currentWeek===w?'active':''}" onclick="currentWeek='${w}';render()">${weekLabels[w]}</button>`).join('')}
+    </div>`;
+  }
+
+  const deptCards = DEPTS.map(d=>{
+    const b = deptTotal(window.store.budget, d, mode);
+    const a = deptTotal(window.store.actual, d, mode);
+    const v = b - a;
+    const p = pct(a,b);
+    const c = deptColor(d);
+    const status = !b ? 'status-na' : (a>b ? 'status-over' : 'status-ok');
+    const statusLabel = !b ? 'No data' : (a>b ? '↑ Over' : '✓ OK');
+    return `<div class="dash-dept-card" style="border-top: 3px solid ${c}">
+      <div class="dash-dept-header">
+        <div class="dash-dept-dot" style="background:${c}"></div>
+        <div class="dash-dept-name">${d}</div>
+        <div style="margin-left:auto"><span class="status-pill ${status}">${statusLabel}</span></div>
+      </div>
+      <div class="dash-row"><span class="dash-row-label">Budget</span><span class="dash-row-val">${fmt(b)}</span></div>
+      <div class="dash-row"><span class="dash-row-label">Actual</span><span class="dash-row-val">${fmt(a)}</span></div>
+      <div class="dash-row"><span class="dash-row-label">Variance</span>${fmtVar(v)}</div>
+      <div class="dash-row"><span class="dash-row-label">Utilisation</span><span class="dash-row-val">${b?p+'%':'—'}</span></div>
+      ${b?`<div class="progress-wrap" style="width:100%;margin-top:8px"><div class="progress-bar ${p>100?'over':'ok'}" style="width:${Math.min(p,100)}%"></div></div>`:''}
+      <button onclick="openBreakdown('${d.replace(/'/g,"\\'")}')"
+        style="margin-top:12px;width:100%;padding:6px 0;border-radius:7px;border:1px solid ${c}44;background:${c}10;color:${c};font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:background 0.15s"
+        onmouseover="this.style.background='${c}22'" onmouseout="this.style.background='${c}10'">
+        View Breakdown
+      </button>
+    </div>`;
+  }).join('');
+
+  // Variance table
+  const varRows = DEPTS.map(d=>{
+    const b = deptTotal(window.store.budget, d, mode);
+    const a = deptTotal(window.store.actual, d, mode);
+    const v = b - a;
+    const c = deptColor(d);
+    return `<tr>
+      <td><span class="dept-tag dept-${d.replace(/[^A-Z]/g,'')}" style="background:${c}18;color:${c}">${d}</span></td>
+      <td class="mono">${fmt(b)}</td>
+      <td class="mono">${fmt(a)}</td>
+      <td>${fmtVar(v)}</td>
+      <td class="mono">${b?pct(a,b)+'%':'—'}</td>
+    </tr>`;
+  }).join('');
+
+  return `
+    <div class="kpi-row">
+      <div class="kpi-card blue">
+        <div class="kpi-label">Total Budget</div>
+        <div class="kpi-value">${fmt(totalBudget)}</div>
+        <div class="kpi-sub">All departments</div>
+      </div>
+      <div class="kpi-card ${totalActual>totalBudget?'red':'green'}">
+        <div class="kpi-label">Total Actual</div>
+        <div class="kpi-value">${fmt(totalActual)}</div>
+        <div class="kpi-sub">${pct(totalActual,totalBudget)}% utilised</div>
+      </div>
+      <div class="kpi-card ${totalVar<0?'red':'green'}">
+        <div class="kpi-label">Net Variance</div>
+        <div class="kpi-value">${fmt(Math.abs(totalVar))}</div>
+        <div class="kpi-sub">${totalVar>=0?'Under budget':'Over budget'}</div>
+      </div>
+      <div class="kpi-card orange">
+        <div class="kpi-label">Departments</div>
+        <div class="kpi-value">${DEPTS.length}</div>
+        <div class="kpi-sub">${DEPTS.filter(d=>deptTotal(store.actual,d,mode)>0).length} with data</div>
+      </div>
+    </div>
+
+    ${weekTabsHtml}
+
+    <div class="section-header"><div class="section-title">Department Overview</div></div>
+    <div class="dash-grid">${deptCards}</div>
+
+    <div class="section-header"><div class="section-title">Variance Summary</div></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Department</th><th>Budget</th><th>Actual</th><th>Variance</th><th>%</th></tr></thead>
+        <tbody>${varRows}</tbody>
+        <tfoot>
+          <tr style="background:#f3f4f8;font-weight:700">
+            <td>TOTAL</td>
+            <td class="mono">${fmt(totalBudget)}</td>
+            <td class="mono">${fmt(totalActual)}</td>
+            <td>${fmtVar(totalVar)}</td>
+            <td class="mono">${pct(totalActual,totalBudget)}%</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div class="section-header">
+      <div class="section-title">Collection Analysis</div>
+      <span class="badge">SMT &amp; CMT</span>
+    </div>
+    ${(()=>{
+      const periods = currentMode==='monthly' ? [['monthly','Monthly']] : [['w1','Week 1'],['w2','Week 2'],['w3','Week 3'],['w4','Week 4']];
+      const allData = periods.map(([key,label])=>{
+        const smt = window.store.collection[key].SMT;
+        const cmt = window.store.collection[key].CMT;
+        return { label, smtT: smt.target||0, smtA: smt.actual||0, cmtT: cmt.target||0, cmtA: cmt.actual||0 };
+      });
+      const maxVal = Math.max(...allData.flatMap(d=>[d.smtT,d.smtA,d.cmtT,d.cmtA]), 1);
+
+      const makeCol = (title, color, data, tKey, aKey) => {
+        const rows = data.map(d=>{
+          const tW = Math.round((d[tKey]/maxVal)*100);
+          const aW = Math.round((d[aKey]/maxVal)*100);
+          const over = d[aKey] > d[tKey];
+          return `<div style="margin-bottom:16px">
+            <div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:8px">${d.label}</div>
+            <div style="display:flex;flex-direction:column;gap:5px">
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="width:46px;font-size:10px;font-weight:600;color:var(--muted);text-align:right;flex-shrink:0">Target</div>
+                <div style="flex:1;background:#eef0f5;border-radius:4px;height:22px;overflow:hidden">
+                  <div style="height:100%;width:${tW}%;background:${color};border-radius:4px;transition:width 0.4s"></div>
+                </div>
+                <div style="width:72px;font-size:10px;font-family:'DM Mono',monospace;font-weight:600;color:${color}">${fmt(d[tKey])}</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="width:46px;font-size:10px;font-weight:600;color:var(--muted);text-align:right;flex-shrink:0">Actual</div>
+                <div style="flex:1;background:#eef0f5;border-radius:4px;height:22px;overflow:hidden">
+                  <div style="height:100%;width:${aW}%;background:${over?'var(--red)':'var(--green)'};border-radius:4px;transition:width 0.4s"></div>
+                </div>
+                <div style="width:72px;font-size:10px;font-family:'DM Mono',monospace;font-weight:600;color:${over?'var(--red)':'var(--green)'}">${fmt(d[aKey])}</div>
+              </div>
+            </div>
+          </div>`;
+        }).join('');
+        return `<div style="flex:1;background:var(--white);border:1px solid var(--border);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow)">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+            <span style="width:10px;height:10px;border-radius:50%;background:${color};display:inline-block"></span>
+            <span style="font-size:13px;font-weight:700">${title}</span>
+          </div>
+          ${rows}
+        </div>`;
+      };
+
+      return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+        ${makeCol('SMT','#4361ee',allData,'smtT','smtA')}
+        ${makeCol('CMT','#f77f00',allData,'cmtT','cmtA')}
+      </div>`;
+    })()}
+  `;
+}
+
+// ============================================================
+// COLLECTION ANALYSIS
+// ============================================================
+function renderCollection(){
+  const periods = currentMode==='monthly'
+    ? [['monthly','Monthly']]
+    : [['w1','Week 1'],['w2','Week 2'],['w3','Week 3'],['w4','Week 4']];
+
+  const cards = periods.map(([key,label])=>{
+    const smt = window.store.collection[key].SMT;
+    const cmt = window.store.collection[key].CMT;
+    const rows = ['SMT','CMT'].map(src=>{
+      const d = window.store.collection[key][src];
+      const v = (d.actual||0) - (d.target||0);
+      const p = d.target ? Math.round((d.actual/d.target)*100) : 0;
+      return `<tr>
+        <td><strong>${src}</strong></td>
+        <td><input type="number" min="0" value="${d.target||''}" placeholder="0"
+             onchange="window.store.collection['${key}']['${src}'].target=+this.value;saveCollectionToDB('${key}','${src}',+this.value,window.store.collection['${key}']['${src}'].actual);render()" /></td>
+        <td><input type="number" min="0" value="${d.actual||''}" placeholder="0"
+             onchange="window.store.collection['${key}']['${src}'].actual=+this.value;saveCollectionToDB('${key}','${src}',window.store.collection['${key}']['${src}'].target,+this.value);render()" /></td>
+        <td>${fmtVar(v)}</td>
+        <td class="mono">${d.target?p+'%':'—'}</td>
+      </tr>`;
+    }).join('');
+    const totT = (smt.target||0)+(cmt.target||0);
+    const totA = (smt.actual||0)+(cmt.actual||0);
+    return `<div class="collection-card">
+      <div class="collection-card-header">${label}</div>
+      <table style="width:100%">
+        <thead><tr><th>Source</th><th>Target (₹)</th><th>Actual (₹)</th><th>Variance</th><th>%</th></tr></thead>
+        <tbody>${rows}</tbody>
+        <tfoot>
+          <tr style="background:#f3f4f8;font-weight:700">
+            <td>TOTAL</td><td class="mono">${fmt(totT)}</td><td class="mono">${fmt(totA)}</td>
+            <td>${fmtVar(totA-totT)}</td><td class="mono">${totT?pct(totA,totT)+'%':'—'}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>`;
+  }).join('');
+
+  return `
+    <div class="section-header">
+      <div class="section-title">Collection Analysis</div>
+      <span class="badge">SMT &amp; CMT</span>
+    </div>
+    <div class="collection-grid" style="${currentMode==='monthly'?'grid-template-columns:1fr':'grid-template-columns:1fr 1fr'}">${cards}</div>
+  `;
+}
+
+
+// ============================================================
+// BREAKDOWN POPUP
+// ============================================================
+function openBreakdown(dept){
+  const mode = currentMode==='monthly' ? 'monthly' : currentWeek;
+  const rows = window.ROWS[dept]||[];
+  const color = deptColor(dept);
+  const cats = [...new Set(rows.map(([c])=>c))];
+
+  const catData = cats.map(cat=>{
+    const catRows = rows.filter(([c])=>c===cat);
+    const b = catRows.reduce((s,[c,sub])=>s+getVal(window.store.budget,dept,getKey(c,sub),mode),0);
+    const a = catRows.reduce((s,[c,sub])=>s+getVal(window.store.actual,dept,getKey(c,sub),mode),0);
+    return {cat, b, a, v: b-a};
+  });
+
+  const totalB = catData.reduce((s,r)=>s+r.b,0);
+  const totalA = catData.reduce((s,r)=>s+r.a,0);
+  const totalV = totalB - totalA;
+  const maxVal = Math.max(...catData.map(r=>Math.max(r.b,r.a)), 1);
+  const utilPct = pct(totalA, totalB);
+
+  // Header
+  document.getElementById('breakdownTitle').innerHTML =
+    `<span style="color:${color}">${dept}</span> — Category Breakdown`;
+  document.getElementById('breakdownSubtitle').textContent =
+    `${currentMode==='monthly' ? 'Monthly' : currentWeek.toUpperCase()} · ${cats.length} categories · ${rows.length} line items`;
+
+  // KPI tiles
+  document.getElementById('breakdownKpis').innerHTML = `
+    <div class="bkd-kpi">
+      <div class="bkd-kpi-label">Total Budget</div>
+      <div class="bkd-kpi-val" style="color:var(--admin)">${fmt(totalB)}</div>
+    </div>
+    <div class="bkd-kpi">
+      <div class="bkd-kpi-label">Total Actual</div>
+      <div class="bkd-kpi-val" style="color:${totalA>totalB?'var(--red)':'var(--green)'}">${fmt(totalA)}</div>
+    </div>
+    <div class="bkd-kpi">
+      <div class="bkd-kpi-label">Net Variance</div>
+      <div class="bkd-kpi-val" style="color:${totalV<0?'var(--red)':'var(--green)'}">${totalV>=0?'+':''}${fmt(totalV)}</div>
+    </div>
+    <div class="bkd-kpi">
+      <div class="bkd-kpi-label">Utilisation</div>
+      <div class="bkd-kpi-val" style="color:${utilPct>100?'var(--red)':'var(--text)'}">${totalB?utilPct+'%':'—'}</div>
+    </div>
+  `;
+
+  // Table rows
+  const tableRows = catData.map(({cat,b,a,v})=>{
+    const barB = Math.round((b/maxVal)*100);
+    const barA = Math.round((a/maxVal)*100);
+    const over = a > b;
+    const p = pct(a,b);
+    return `<tr>
+      <td style="font-weight:600">${cat}</td>
+      <td class="mono">${fmt(b)}</td>
+      <td class="mono" style="color:${over?'var(--red)':'var(--text)'}">${fmt(a)}</td>
+      <td class="bkd-bar-cell">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div class="bkd-bar-track"><div class="bkd-bar-fill" style="width:${barB}%;background:${color}44"></div></div>
+          <div class="bkd-bar-track"><div class="bkd-bar-fill" style="width:${barA}%;background:${over?'var(--red)':color}"></div></div>
+        </div>
+      </td>
+      <td>${fmtVar(v)}</td>
+      <td class="mono" style="color:${over?'var(--red)':'var(--muted)'}">${b?p+'%':'—'}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('breakdownBody').innerHTML = `
+    <table class="bkd-table">
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Budget</th>
+          <th>Actual</th>
+          <th>Bar (Budget / Actual)</th>
+          <th>Variance</th>
+          <th>%</th>
+        </tr>
+      </thead>
+      <tbody>${tableRows}</tbody>
+      <tfoot>
+        <tr>
+          <td>TOTAL</td>
+          <td class="mono">${fmt(totalB)}</td>
+          <td class="mono" style="color:${totalA>totalB?'var(--red)':'var(--text)'}">${fmt(totalA)}</td>
+          <td></td>
+          <td>${fmtVar(totalV)}</td>
+          <td class="mono">${totalB?utilPct+'%':'—'}</td>
+        </tr>
+      </tfoot>
+    </table>
+  `;
+
+  document.getElementById('breakdownModal').style.display = 'flex';
+}
+
+// ============================================================
+// CLEAR DATA & SORT
+// ============================================================
+async function clearDeptData(dept){
+  const mode = currentMode==='monthly' ? 'monthly' : currentWeek;
+  if(!confirm(`Clear all Budget & Actual data for ${dept} (${mode})?`)) return;
+  (window.ROWS[dept]||[]).forEach(([cat,sub])=>{
+    const k = getKey(cat,sub);
+    if(window.store.budget[dept]&&window.store.budget[dept][k]) window.store.budget[dept][k][mode]=0;
+    if(window.store.actual[dept]&&window.store.actual[dept][k]) window.store.actual[dept][k][mode]=0;
+  });
+  if(window.SB){
+    await Promise.all([
+      SB.from('budget_data').delete().eq('branch_name',currentBranch).eq('dept_name',dept).eq('period',mode),
+      SB.from('actual_data').delete().eq('branch_name',currentBranch).eq('dept_name',dept).eq('period',mode)
+    ]);
+  }
+  render();
+  showToast('Data cleared');
+}
+
+function toggleSort(dept, col){
+  if(!col){ deptSort[dept] = {col:'',dir:1}; render(); return; }
+  const s = deptSort[dept] || {col:'',dir:1};
+  deptSort[dept] = (s.col===col) ? {col, dir: s.dir*-1} : {col, dir:-1};
+  render();
+}
+
+// ============================================================
+// ADD FIELD TO DEPT
+// ============================================================
+let _addFieldDept = '';
+
+function openAddFieldModal(dept){
+  _addFieldDept = dept;
+  document.getElementById('addFieldCat').value = '';
+  document.getElementById('addFieldSub').value = '';
+  document.getElementById('addFieldModal').style.display = 'flex';
+  setTimeout(()=>document.getElementById('addFieldCat').focus(), 50);
+}
+
+function closeAddFieldModal(){
+  document.getElementById('addFieldModal').style.display = 'none';
+}
+
+function saveAddField(){
+  const cat = document.getElementById('addFieldCat').value.trim();
+  const sub = document.getElementById('addFieldSub').value.trim();
+  if(!cat || !sub){ alert('Please fill in both Category and Sub-category.'); return; }
+  const dept = _addFieldDept;
+  if(!ROWS[dept]) ROWS[dept] = [];
+  ROWS[dept].push([cat, sub]);
+  const k = getKey(cat, sub);
+  if(!store.budget[dept]) store.budget[dept] = {};
+  if(!store.actual[dept]) store.actual[dept] = {};
+  store.budget[dept][k] = {monthly:0,w1:0,w2:0,w3:0,w4:0};
+  store.actual[dept][k] = {monthly:0,w1:0,w2:0,w3:0,w4:0};
+  closeAddFieldModal();
+  // Save to Supabase
+  saveFieldToDB(dept, cat, sub);
+  render();
+  showToast('Field added');
+}
+
+let _editFieldDept='', _editFieldCat='', _editFieldSub='';
+
+function editField(dept, cat, sub){
+  _editFieldDept=dept; _editFieldCat=cat; _editFieldSub=sub;
+  document.getElementById('editFieldCat').value = cat;
+  document.getElementById('editFieldSub').value = sub;
+  document.getElementById('editFieldModal').style.display = 'flex';
+  setTimeout(()=>document.getElementById('editFieldCat').focus(), 50);
+}
+function closeEditFieldModal(){ document.getElementById('editFieldModal').style.display='none'; }
+function saveEditField(){
+  const nc = document.getElementById('editFieldCat').value.trim();
+  const ns = document.getElementById('editFieldSub').value.trim();
+  if(!nc||!ns){ alert('Category and Sub-category cannot be empty.'); return; }
+  const dept=_editFieldDept, cat=_editFieldCat, sub=_editFieldSub;
+  const idx = (ROWS[dept]||[]).findIndex(([c,s])=>c===cat&&s===sub);
+  if(idx===-1) return;
+  const oldKey=getKey(cat,sub), newKey=getKey(nc,ns);
+  ROWS[dept][idx]=[nc,ns];
+  if(store.budget[dept]&&store.budget[dept][oldKey]){ store.budget[dept][newKey]=store.budget[dept][oldKey]; delete store.budget[dept][oldKey]; }
+  if(store.actual[dept]&&store.actual[dept][oldKey]){ store.actual[dept][newKey]=store.actual[dept][oldKey]; delete store.actual[dept][oldKey]; }
+  closeEditFieldModal();
+  render();
+  showToast('Field updated');
+}
+
+function removeField(dept, cat, sub){
+  if(!confirm(`Remove "${cat} / ${sub}" from ${dept}?`)) return;
+  ROWS[dept] = (ROWS[dept]||[]).filter(([c,s])=>!(c===cat&&s===sub));
+  render();
+  showToast('Field removed');
+}
+
+// ============================================================
+// ADD DEPARTMENT
+// ============================================================
+const PALETTE = ['#4361ee','#f77f00','#7b2d8b','#2ec4b6','#e63946','#06d6a0','#118ab2','#ef476f','#ffd166','#073b4c'];
+let selectedColor = PALETTE[0];
+
+function openAddDeptModal(){
+  selectedColor = PALETTE[0];
+  document.getElementById('newDeptName').value = '';
+  document.getElementById('newDeptRows').innerHTML = '';
+  addDeptRow(); // start with one empty row
+
+  const sc = document.getElementById('colorSwatches');
+  sc.innerHTML = PALETTE.map(c=>`
+    <div class="color-swatch ${c===selectedColor?'selected':''}" style="background:${c}"
+         onclick="selectedColor='${c}';document.querySelectorAll('.color-swatch').forEach(s=>s.classList.toggle('selected',s.style.background==='${c}'))"></div>
+  `).join('');
+
+  document.getElementById('addDeptModal').style.display = 'flex';
+}
+
+function closeAddDeptModal(){
+  document.getElementById('addDeptModal').style.display = 'none';
+}
+
+function addDeptRow(){
+  const list = document.getElementById('newDeptRows');
+  const div = document.createElement('div');
+  div.className = 'modal-row-item';
+  div.innerHTML = `
+    <input type="text" placeholder="Category" />
+    <input type="text" placeholder="Sub-category" />
+    <button class="modal-row-del" onclick="this.parentElement.remove()">✕</button>
+  `;
+  list.appendChild(div);
+}
+
+function saveNewDept(){
+  const name = document.getElementById('newDeptName').value.trim().toUpperCase();
+  if(!name){ alert('Please enter a department name.'); return; }
+  if(DEPTS.includes(name)){ alert('Department already exists.'); return; }
+
+  const rowEls = document.querySelectorAll('#newDeptRows .modal-row-item');
+  const rows = [];
+  rowEls.forEach(el=>{
+    const inputs = el.querySelectorAll('input');
+    const cat = inputs[0].value.trim();
+    const sub = inputs[1].value.trim();
+    if(cat && sub) rows.push([cat, sub]);
+  });
+
+  // Register dept
+  DEPTS.push(name);
+  DEPT_COLORS[name] = selectedColor;
+  ROWS[name] = rows;
+  store.budget[name] = {};
+  store.actual[name] = {};
+  rows.forEach(([cat,sub])=>{
+    const k = getKey(cat,sub);
+    store.budget[name][k] = {monthly:0,w1:0,w2:0,w3:0,w4:0};
+    store.actual[name][k] = {monthly:0,w1:0,w2:0,w3:0,w4:0};
+  });
+
+  // Add sidebar button
+  const section = document.getElementById('dept-sidebar-section');
+  const btn = document.createElement('button');
+  btn.className = 'dept-btn';
+  btn.dataset.dept = name;
+  btn.onclick = ()=>selectDept(name);
+  btn.innerHTML = `<span class="dot" style="background:${selectedColor}"></span> ${name.charAt(0)+name.slice(1).toLowerCase()}<button class="dept-del" onclick="event.stopPropagation();deleteDept('${name}')">✕</button>`;
+  section.appendChild(btn);
+
+  closeAddDeptModal();
+  renderSidebar();
+  // Save to Supabase
+  saveDeptToDB(name, selectedColor);
+  rows.forEach(([cat,sub]) => saveFieldToDB(name, cat, sub));
+  selectDept(name);
+  showToast('Department added');
+}
+
+// ============================================================
+// SIDEBAR
+// ============================================================
+function renderSidebar(){
+  const section = document.getElementById('dept-sidebar-section');
+  // Remove all existing dept buttons (keep the label)
+  section.querySelectorAll('.dept-btn').forEach(b=>b.remove());
+
+  DEPTS.forEach(name=>{
+    const color = deptColor(name);
+    const label = name.charAt(0) + name.slice(1).toLowerCase();
+
+    const btn = document.createElement('div');
+    btn.className = 'dept-btn' + (currentDept===name?' active':'');
+    btn.dataset.dept = name;
+    btn.style.cursor = 'pointer';
+
+    const dot = document.createElement('span');
+    dot.className = 'dot';
+    dot.style.background = color;
+
+    const lbl = document.createElement('span');
+    lbl.textContent = label;
+    lbl.style.flex = '1';
+
+    const del = document.createElement('span');
+    del.className = 'dept-del';
+    del.textContent = '✕';
+    del.title = 'Delete';
+    del.onclick = e=>{ e.stopPropagation(); deleteDept(name); };
+
+    const edit = document.createElement('span');
+    edit.className = 'dept-del';
+    edit.textContent = '✎';
+    edit.title = 'Rename';
+    edit.style.marginRight = '2px';
+    edit.onclick = e=>{ e.stopPropagation(); renameDept(name); };
+
+    btn.appendChild(dot);
+    btn.appendChild(lbl);
+    btn.appendChild(edit);
+    btn.appendChild(del);
+    btn.onclick = ()=>selectDept(name);
+    section.appendChild(btn);
+  });
+}
+
+let _renameDeptOld='';
+function renameDept(name){
+  _renameDeptOld=name;
+  document.getElementById('renameDeptInput').value=name;
+  document.getElementById('renameDeptModal').style.display='flex';
+  setTimeout(()=>document.getElementById('renameDeptInput').select(),50);
+}
+function closeRenameDeptModal(){ document.getElementById('renameDeptModal').style.display='none'; }
+function saveRenameDept(){
+  const n = document.getElementById('renameDeptInput').value.trim().toUpperCase();
+  const name = _renameDeptOld;
+  if(!n) return;
+  if(n===name){ closeRenameDeptModal(); return; }
+  if(DEPTS.includes(n)){ alert('A department with that name already exists.'); return; }
+  const idx=DEPTS.indexOf(name);
+  DEPTS[idx]=n;
+  DEPT_COLORS[n]=DEPT_COLORS[name]; delete DEPT_COLORS[name];
+  ROWS[n]=ROWS[name]; delete ROWS[name];
+  store.budget[n]=store.budget[name]; delete store.budget[name];
+  store.actual[n]=store.actual[name]; delete store.actual[name];
+  if(deptCatFilter[name]){ deptCatFilter[n]=deptCatFilter[name]; delete deptCatFilter[name]; }
+  if(deptSort[name]){ deptSort[n]=deptSort[name]; delete deptSort[name]; }
+  if(currentDept===name) currentDept=n;
+  closeRenameDeptModal();
+  renderSidebar();
+  render();
+  showToast('Department renamed');
+}
+
+// ============================================================
+// DELETE DEPARTMENT
+// ============================================================
+function deleteDept(name){
+  if(!confirm(`Delete department "${name}" and all its data?`)) return;
+  const idx = DEPTS.indexOf(name);
+  if(idx === -1) return;
+  DEPTS.splice(idx, 1);
+  delete DEPT_COLORS[name];
+  delete ROWS[name];
+  delete store.budget[name];
+  delete store.actual[name];
+  if(currentDept === name) currentDept = 'DASHBOARD';
+  renderSidebar();
+  selectDept(currentDept);
+  showToast('Department deleted');
+}
+
+// ============================================================
+// BRANCHES
+// ============================================================
+const BRANCH_NAMES = ['Manjeri','Tirur','Kozhicode','Kannur','Kasaragod','Palakkad','Thrissur','Kollam','Attingal','Marthadam','Allappuzha','Kuttiyadi','Bangalore','Hyderabad'];
+const BRANCH_COLORS = ['#4361ee','#f77f00','#7b2d8b','#2ec4b6','#e63946','#06d6a0','#118ab2','#ef476f','#f4a261','#073b4c','#4361ee','#f77f00','#7b2d8b','#2ec4b6'];
+
+// Each branch gets its own isolated data store
+const branchData = {};
+BRANCH_NAMES.forEach((b,i)=>{
+  branchData[b] = {
+    DEPTS: ['ADMINISTRATIVE','OPERATIONS','R&D','MARKETING','BRANDING'],
+    DEPT_COLORS: { ADMINISTRATIVE:'#4361ee', OPERATIONS:'#f77f00', 'R&D':'#7b2d8b', MARKETING:'#2ec4b6', BRANDING:'#e63946' },
+    ROWS: {
+      ADMINISTRATIVE:[['Salary','Faculty'],['Salary','SCM'],['Salary','Office Staff'],['Salary','Receptionist'],['Recruitment','Hiring Cost'],['Travel & Allowance','Food'],['Travel & Allowance','Travel'],['Office','Office Rent'],['Hostel','Hostel Rent'],['Office','Electricity'],['Hostel','Hostel Electricity'],['Office','MobileRecharges'],['Office','Internet'],['Office','Refreshment'],['Office','Stationery'],['Office','Software Subscriptions'],['Office','Maintenance & Repairs'],['Hostel','Maintenance & Repairs'],['Office','Cleaning'],['Hostel','Cleaning'],['Office','Water Supply'],['Hostel','Water Supply'],['Hostel','Food & Mess'],['Hostel','Warden Salary'],['Hostel','Security'],['Hostel','Housekeeping'],['Infrastructure','Classroom Setup'],['Student Kit','SMT'],['Student Kit','CMT'],['Student Kit','Trouble shooting']],
+      OPERATIONS:[['Student Kit','Tool&Spare'],['Logistics','Courier – Tool Kit'],['Research','Tools & Software'],['Training','Workshops'],['Recruitment','Hiring Cost'],['Travel & Allowance','Food'],['Travel & Allowance','Travel']],
+      'R&D':[['Salary','R&D staff'],['Advertising','Digital Ads'],['Campaigns','Lead Generation'],['Events','Seminars/Webinars'],['Recruitment','Hiring Cost'],['Travel & Allowance','Food'],['Travel & Allowance','Travel']],
+      MARKETING:[['Salary','offline Marketing staff'],['Salary','online Marketing staff'],['Design','Creatives'],['Media','Video Production'],['Promotion','Brand Promotion'],['Recruitment','Hiring Cost'],['Travel & Allowance','Food'],['Travel & Allowance','Travel']],
+      BRANDING:[['Salary','Offline branding staff'],['Salary','Online branding staff'],['Recruitment','Hiring Cost'],['Travel & Allowance','Food'],['Travel & Allowance','Travel']]
+    },
+    store: {
+      budget:{}, actual:{},
+      collection:{ monthly:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}}, w1:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}}, w2:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}}, w3:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}}, w4:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}} },
+      headSalary:{monthly:0,w1:0,w2:0,w3:0,w4:0},
+      directorWithdrawal:{monthly:0,w1:0,w2:0,w3:0,w4:0},
+      cashBalance:{monthly:0,w1:0,w2:0,w3:0,w4:0}
+    },
+    deptCatFilter:{},
+    deptSort:{},
+    currentDept:'DASHBOARD'
+  };
+  // init store rows
+  const bd = branchData[b];
+  bd.DEPTS.forEach(d=>{
+    bd.store.budget[d]={}; bd.store.actual[d]={};
+    (bd.ROWS[d]||[]).forEach(([cat,sub])=>{
+      const k=cat+'__'+sub;
+      bd.store.budget[d][k]={monthly:0,w1:0,w2:0,w3:0,w4:0};
+      bd.store.actual[d][k]={monthly:0,w1:0,w2:0,w3:0,w4:0};
+    });
+  });
+});
+
+let currentBranch = BRANCH_NAMES[0];
+
+function B(){ return branchData[currentBranch]; }
+
+function switchBranch(name){
+  B().currentDept = currentDept;
+  currentBranch = name;
+  currentDept = 'DASHBOARD';
+  getBranchProxy();
+  document.getElementById('branchBtnLabel').textContent = name;
+  document.getElementById('branchDot').style.background = BRANCH_COLORS[BRANCH_NAMES.indexOf(name)%BRANCH_COLORS.length];
+  closeBranchDropdown();
+  if (window.SB) {
+    loadBranchFromDB(name).then(()=>{ renderSidebar(); render(); });
+  } else {
+    renderSidebar(); render();
+  }
+}
+
+function toggleBranchDropdown(){
+  const dd = document.getElementById('branchDropdown');
+  if(dd.classList.contains('open')){ closeBranchDropdown(); return; }
+  renderBranchDropdown();
+  dd.classList.add('open');
+}
+
+function closeBranchDropdown(){
+  document.getElementById('branchDropdown').classList.remove('open');
+}
+
+function renderBranchDropdown(){
+  const dd = document.getElementById('branchDropdown');
+  dd.innerHTML = BRANCH_NAMES.map((name,i)=>{
+    const color = BRANCH_COLORS[i%BRANCH_COLORS.length];
+    const active = name===currentBranch;
+    const link = `${location.origin}${location.pathname.replace('index.html','').replace('admin.html','')}branch.html?branch=${encodeURIComponent(name)}`;
+    return `<div class="branch-option${active?' active':''}" style="justify-content:space-between">
+      <div onclick="switchBranch('${name}')" style="display:flex;align-items:center;gap:10px;flex:1;cursor:pointer">
+        <span style="width:8px;height:8px;border-radius:50%;background:${color};display:inline-block;flex-shrink:0"></span>
+        ${name}
+      </div>
+      <span onclick="navigator.clipboard.writeText('${link}').then(()=>showToast('Link copied'))" title="Copy branch link" style="cursor:pointer;font-size:11px;color:var(--admin);padding:2px 7px;border-radius:4px;background:var(--admin-light);margin-left:8px;flex-shrink:0">🔗</span>
+    </div>`;
+  }).join('') +
+  `<div class="branch-add-row" onclick="openAddBranchModal()">＋ Add Branch</div>`;
+}
+
+function openAddBranchModal(){
+  closeBranchDropdown();
+  document.getElementById('newBranchName').value='';
+  document.getElementById('addBranchModal').style.display='flex';
+  setTimeout(()=>document.getElementById('newBranchName').focus(),50);
+}
+function closeAddBranchModal(){ document.getElementById('addBranchModal').style.display='none'; }
+
+function saveNewBranch(){
+  const name = document.getElementById('newBranchName').value.trim();
+  if(!name){ alert('Enter a branch name.'); return; }
+  if(BRANCH_NAMES.includes(name)){ alert('Branch already exists.'); return; }
+  BRANCH_NAMES.push(name);
+  BRANCH_COLORS.push(PALETTE[BRANCH_NAMES.length%PALETTE.length]);
+  branchData[name]={
+    DEPTS:['ADMINISTRATIVE','OPERATIONS','R&D','MARKETING','BRANDING'],
+    DEPT_COLORS:{ADMINISTRATIVE:'#4361ee',OPERATIONS:'#f77f00','R&D':'#7b2d8b',MARKETING:'#2ec4b6',BRANDING:'#e63946'},
+    ROWS:{
+      ADMINISTRATIVE:[['Salary','Faculty'],['Salary','SCM'],['Salary','Office Staff'],['Salary','Receptionist'],['Recruitment','Hiring Cost'],['Travel & Allowance','Food'],['Travel & Allowance','Travel'],['Office','Office Rent'],['Hostel','Hostel Rent'],['Office','Electricity'],['Hostel','Hostel Electricity'],['Office','MobileRecharges'],['Office','Internet'],['Office','Refreshment'],['Office','Stationery'],['Office','Software Subscriptions'],['Office','Maintenance & Repairs'],['Hostel','Maintenance & Repairs'],['Office','Cleaning'],['Hostel','Cleaning'],['Office','Water Supply'],['Hostel','Water Supply'],['Hostel','Food & Mess'],['Hostel','Warden Salary'],['Hostel','Security'],['Hostel','Housekeeping'],['Infrastructure','Classroom Setup'],['Student Kit','SMT'],['Student Kit','CMT'],['Student Kit','Trouble shooting']],
+      OPERATIONS:[['Student Kit','Tool&Spare'],['Logistics','Courier – Tool Kit'],['Research','Tools & Software'],['Training','Workshops'],['Recruitment','Hiring Cost'],['Travel & Allowance','Food'],['Travel & Allowance','Travel']],
+      'R&D':[['Salary','R&D staff'],['Advertising','Digital Ads'],['Campaigns','Lead Generation'],['Events','Seminars/Webinars'],['Recruitment','Hiring Cost'],['Travel & Allowance','Food'],['Travel & Allowance','Travel']],
+      MARKETING:[['Salary','offline Marketing staff'],['Salary','online Marketing staff'],['Design','Creatives'],['Media','Video Production'],['Promotion','Brand Promotion'],['Recruitment','Hiring Cost'],['Travel & Allowance','Food'],['Travel & Allowance','Travel']],
+      BRANDING:[['Salary','Offline branding staff'],['Salary','Online branding staff'],['Recruitment','Hiring Cost'],['Travel & Allowance','Food'],['Travel & Allowance','Travel']]
+    },
+    store:{
+      budget:{},actual:{},
+      collection:{monthly:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}},w1:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}},w2:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}},w3:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}},w4:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}}},
+      headSalary:{monthly:0,w1:0,w2:0,w3:0,w4:0},directorWithdrawal:{monthly:0,w1:0,w2:0,w3:0,w4:0},cashBalance:{monthly:0,w1:0,w2:0,w3:0,w4:0}
+    },
+    deptCatFilter:{},deptSort:{},currentDept:'DASHBOARD'
+  };
+  const bd=branchData[name];
+  bd.DEPTS.forEach(d=>{
+    bd.store.budget[d]={}; bd.store.actual[d]={};
+    (bd.ROWS[d]||[]).forEach(([cat,sub])=>{ const k=cat+'__'+sub; bd.store.budget[d][k]={monthly:0,w1:0,w2:0,w3:0,w4:0}; bd.store.actual[d][k]={monthly:0,w1:0,w2:0,w3:0,w4:0}; });
+  });
+  closeAddBranchModal();
+  switchBranch(name);
+  showToast('Branch added');
+}
+
+// close dropdown when clicking outside
+document.addEventListener('click', e=>{
+  if(!document.getElementById('branchWrap').contains(e.target)) closeBranchDropdown();
+});
+
+// ============================================================
+// INIT
+// ============================================================
+// Proxy all data access through current branch
+function getBranchProxy(){
+  const bd = B();
+  window.DEPTS = bd.DEPTS;
+  window.DEPT_COLORS = bd.DEPT_COLORS;
+  window.ROWS = bd.ROWS;
+  window.store = bd.store;
+  window.deptCatFilter = bd.deptCatFilter;
+  window.deptSort = bd.deptSort;
+}
+
+// Patch render and selectDept to use branch data
+const _origRender = render;
+window.render = function(){
+  getBranchProxy();
+  _origRender();
+};
+const _origSelectDept = selectDept;
+window.selectDept = async function(d){
+  currentDept = d;
+  B().currentDept = d;
+  document.querySelectorAll('.dept-btn').forEach(b=>b.classList.toggle('active', b.dataset.dept===d));
+  if (d !== 'DASHBOARD' && d !== 'COLLECTION' && window.SB) {
+    // Reload actuals fresh from Supabase
+    const { data: actuals } = await SB.from('actual_data').select('dept_name,field_key,period,value')
+      .eq('branch_name', currentBranch).eq('dept_name', d);
+    const bd = B();
+    if (!bd.store.actual[d]) bd.store.actual[d] = {};
+    (actuals||[]).forEach(r => {
+      if (!bd.store.actual[r.dept_name]) bd.store.actual[r.dept_name] = {};
+      if (!bd.store.actual[r.dept_name][r.field_key]) bd.store.actual[r.dept_name][r.field_key] = {monthly:0,w1:0,w2:0,w3:0,w4:0};
+      bd.store.actual[r.dept_name][r.field_key][r.period] = Number(r.value);
+    });
+    getBranchProxy();
+  }
+  render();
+};
+const _origRenderSidebar = renderSidebar;
+window.renderSidebar = function(){
+  getBranchProxy();
+  _origRenderSidebar();
+};
+
+// Read branch from URL param if present
+const _urlBranch = new URLSearchParams(window.location.search).get('branch');
+if (_urlBranch && BRANCH_NAMES.includes(_urlBranch)) {
+  currentBranch = _urlBranch;
+} else if (_urlBranch) {
+  // Branch not in default list yet — will be loaded from DB
+  BRANCH_NAMES.push(_urlBranch);
+  BRANCH_COLORS.push(PALETTE[BRANCH_NAMES.length % PALETTE.length]);
+  branchData[_urlBranch] = {
+    DEPTS: [], DEPT_COLORS: {}, ROWS: {},
+    store: { budget:{}, actual:{}, collection:{monthly:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}},w1:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}},w2:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}},w3:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}},w4:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}}}, headSalary:{monthly:0,w1:0,w2:0,w3:0,w4:0}, directorWithdrawal:{monthly:0,w1:0,w2:0,w3:0,w4:0}, cashBalance:{monthly:0,w1:0,w2:0,w3:0,w4:0} },
+    deptCatFilter:{}, deptSort:{}, currentDept:'DASHBOARD'
+  };
+  currentBranch = _urlBranch;
+}
+
+document.getElementById('branchBtnLabel').textContent = currentBranch;
+document.getElementById('branchDot').style.background = BRANCH_COLORS[BRANCH_NAMES.indexOf(currentBranch) % BRANCH_COLORS.length];
+getBranchProxy();
+// renderSidebar and render are called by sb-ready event
+// Fallback if Supabase not loaded (local use)
+if (!document.querySelector('script[type="module"]')) {
+  renderSidebar();
+  render();
+}
+</script>
+</body>
+</html>

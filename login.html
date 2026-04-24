@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Magnus Institute of Technology — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: #f7f8fc; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+  .card { background: #fff; border-radius: 16px; padding: 40px 36px; width: 380px; box-shadow: 0 8px 32px rgba(0,0,0,0.10); }
+  .logo { font-size: 20px; font-weight: 700; color: #1a1d2e; margin-bottom: 6px; }
+  .logo span { color: #4361ee; }
+  .sub { font-size: 13px; color: #7b8299; margin-bottom: 32px; }
+  label { font-size: 11px; font-weight: 600; color: #7b8299; text-transform: uppercase; letter-spacing: 0.6px; display: block; margin-bottom: 5px; }
+  input { width: 100%; padding: 10px 13px; border: 1.5px solid #e8eaf0; border-radius: 8px; font-family: inherit; font-size: 14px; outline: none; transition: border 0.15s; margin-bottom: 16px; }
+  input:focus { border-color: #4361ee; }
+  .btn { width: 100%; padding: 11px; border-radius: 8px; border: none; background: #4361ee; color: #fff; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; margin-top: 4px; }
+  .btn:hover { opacity: 0.88; }
+  .err { color: #e63946; font-size: 13px; margin-top: 12px; text-align: center; min-height: 20px; }
+  .loading { opacity: 0.6; pointer-events: none; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo"><span>Magnus</span> Institute of Technology</div>
+  <div class="sub">Budget Dashboard — Sign in to continue</div>
+  <label>Email</label>
+  <input type="email" id="email" placeholder="you@magnus.com" />
+  <label>Password</label>
+  <input type="password" id="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()" />
+  <button class="btn" onclick="login()" id="btn">Sign In</button>
+  <div class="err" id="err"></div>
+</div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+const supabase = createClient(
+  'https://jcckxekjaetwoeilptse.supabase.co',
+  'sb_publishable_20hUKqtjjIPDgdAreDsBTQ_yalRVevL',
+  { auth: { persistSession: true, storageKey: 'magnus-auth', storage: window.localStorage } }
+);
+
+// If already logged in, redirect
+const { data: { session } } = await supabase.auth.getSession();
+if (session) redirect(session.user);
+
+async function redirect(user) {
+  await new Promise(r => setTimeout(r, 300));
+  const { data: profile } = await supabase.from('profiles').select('role,branch_name').eq('id', user.id).single();
+  if (profile?.role === 'admin') {
+    window.location.href = 'index.html';
+  } else if (profile?.branch_name) {
+    window.location.href = `branch.html?branch=${encodeURIComponent(profile.branch_name)}`;
+  } else {
+    window.location.href = 'index.html';
+  }
+}
+
+window.login = async function() {
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const btn = document.getElementById('btn');
+  const err = document.getElementById('err');
+  err.textContent = '';
+  if (!email || !password) { err.textContent = 'Please enter email and password.'; return; }
+  btn.textContent = 'Signing in…'; btn.classList.add('loading');
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  btn.textContent = 'Sign In'; btn.classList.remove('loading');
+  if (error) { err.textContent = error.message; return; }
+  redirect(data.user);
+};
+</script>
+</body>
+</html>

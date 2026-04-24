@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Magnus Institute of Technology — Branches</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f8fc; --white: #fff; --border: #e8eaf0; --text: #1a1d2e;
+    --muted: #7b8299; --admin: #4361ee; --admin-light: #eef1fd;
+    --green: #2dc653; --red: #e63946; --shadow: 0 2px 12px rgba(0,0,0,0.07);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.10);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  .topbar {
+    background: var(--white); border-bottom: 1px solid var(--border);
+    padding: 0 32px; height: 60px; display: flex; align-items: center;
+    justify-content: space-between; position: sticky; top: 0; z-index: 100;
+  }
+  .topbar-title { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+  .topbar-title span { color: var(--admin); }
+  .sign-out-btn {
+    padding: 6px 14px; border-radius: 7px; border: 1px solid var(--border);
+    background: none; font-family: inherit; font-size: 13px; cursor: pointer; color: var(--muted);
+  }
+  .sign-out-btn:hover { background: #fdecea; color: var(--red); border-color: #fdecea; }
+
+  .page { max-width: 1200px; margin: 0 auto; padding: 32px 28px; }
+
+  .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+  .page-title { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
+  .page-sub { font-size: 13px; color: var(--muted); margin-top: 3px; }
+
+  .add-btn {
+    display: flex; align-items: center; gap: 7px; padding: 9px 20px;
+    border-radius: 9px; border: none; background: var(--admin); color: #fff;
+    font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 0.15s;
+  }
+  .add-btn:hover { opacity: 0.88; }
+
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 32px; }
+  .kpi-card { background: var(--white); border-radius: 12px; padding: 18px 20px; border: 1px solid var(--border); box-shadow: var(--shadow); }
+  .kpi-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+  .kpi-value { font-size: 24px; font-weight: 700; font-family: 'DM Mono', monospace; letter-spacing: -1px; }
+  .kpi-value.blue { color: var(--admin); }
+  .kpi-value.green { color: var(--green); }
+
+  .section-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
+
+  .branches-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+
+  .branch-card {
+    background: var(--white); border-radius: 14px; border: 1px solid var(--border);
+    box-shadow: var(--shadow); overflow: hidden; transition: box-shadow 0.18s, transform 0.18s;
+  }
+  .branch-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+
+  .branch-card-top {
+    padding: 18px 20px 14px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; justify-content: space-between;
+  }
+  .branch-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+  .branch-name { font-size: 15px; font-weight: 700; margin-left: 10px; flex: 1; }
+  .branch-delete {
+    background: none; border: none; cursor: pointer; color: var(--muted);
+    font-size: 14px; padding: 2px 6px; border-radius: 4px; transition: color 0.15s;
+  }
+  .branch-delete:hover { color: var(--red); background: #fdecea; }
+
+  .branch-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; padding: 14px 20px; gap: 10px; border-bottom: 1px solid var(--border); }
+  .stat { text-align: center; }
+  .stat-val { font-size: 18px; font-weight: 700; font-family: 'DM Mono', monospace; color: var(--text); }
+  .stat-label { font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; margin-top: 2px; }
+
+  .branch-budget { padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .budget-item { display: flex; flex-direction: column; gap: 2px; }
+  .budget-label { font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .budget-val { font-size: 13px; font-weight: 700; font-family: 'DM Mono', monospace; }
+
+  .progress-wrap { background: #eef0f5; border-radius: 4px; height: 4px; margin: 8px 20px 0; }
+  .progress-bar { height: 4px; border-radius: 4px; transition: width 0.5s; }
+
+  .branch-footer { padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; }
+  .dept-pills { display: flex; gap: 5px; flex-wrap: wrap; flex: 1; }
+  .dept-pill { padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+
+  .open-btn {
+    padding: 7px 18px; border-radius: 8px; border: none; background: var(--admin);
+    color: #fff; font-family: inherit; font-size: 12px; font-weight: 600;
+    cursor: pointer; text-decoration: none; display: inline-block; transition: opacity 0.15s; flex-shrink: 0;
+  }
+  .open-btn:hover { opacity: 0.88; }
+
+  .empty { text-align: center; padding: 60px; color: var(--muted); font-size: 14px; }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(26,29,46,0.45); z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .modal { background: var(--white); border-radius: 14px; padding: 28px; width: 400px; max-width: 95vw; box-shadow: var(--shadow-lg); }
+  .modal-title { font-size: 15px; font-weight: 700; margin-bottom: 18px; }
+  .modal-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 5px; }
+  .modal-input {
+    width: 100%; padding: 9px 12px; border: 1.5px solid var(--border); border-radius: 8px;
+    font-family: inherit; font-size: 13px; outline: none; transition: border 0.15s; margin-bottom: 14px;
+  }
+  .modal-input:focus { border-color: var(--admin); }
+  .color-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+  .color-swatch { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: border 0.15s; }
+  .color-swatch.selected { border-color: var(--text); }
+  .modal-footer { display: flex; gap: 10px; justify-content: flex-end; }
+  .modal-cancel { padding: 8px 18px; border-radius: 7px; border: 1px solid var(--border); background: none; font-family: inherit; font-size: 13px; cursor: pointer; color: var(--muted); }
+  .modal-cancel:hover { background: var(--bg); }
+  .modal-save { padding: 8px 22px; border-radius: 7px; border: none; background: var(--admin); color: #fff; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .modal-save:hover { opacity: 0.88; }
+
+  .toast { position: fixed; bottom: 24px; right: 24px; background: #1a1d2e; color: #fff; padding: 10px 20px; border-radius: 9px; font-size: 13px; font-weight: 500; z-index: 999; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+  .toast.show { opacity: 1; }
+
+  ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: #d0d3de; border-radius: 10px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-title"><span>Magnus</span> Institute of Technology</div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <span style="font-size:12px;font-weight:600;color:var(--muted);background:var(--admin-light);color:var(--admin);padding:4px 12px;border-radius:20px">Admin</span>
+    <button class="sign-out-btn" id="signOutBtn">Sign Out</button>
+  </div>
+</div>
+
+<div class="page">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Branches Overview</div>
+      <div class="page-sub">All branches across Magnus Institute of Technology</div>
+    </div>
+    <button class="add-btn" onclick="openAddModal()">＋ Add Branch</button>
+  </div>
+
+  <div class="kpi-row" id="kpiRow">
+    <div class="kpi-card"><div class="kpi-label">Total Branches</div><div class="kpi-value blue" id="kpiBranches">—</div></div>
+    <div class="kpi-card"><div class="kpi-label">Total Departments</div><div class="kpi-value blue" id="kpiDepts">—</div></div>
+    <div class="kpi-card"><div class="kpi-label">Total Fields</div><div class="kpi-value blue" id="kpiFields">—</div></div>
+    <div class="kpi-card"><div class="kpi-label">Total Budget (Monthly)</div><div class="kpi-value green" id="kpiBudget">—</div></div>
+  </div>
+
+  <div class="section-label">All Branches</div>
+  <div class="branches-grid" id="branchesGrid">
+    <div class="empty">Loading branches…</div>
+  </div>
+</div>
+
+<!-- Add Branch Modal -->
+<div class="modal-overlay" id="addModal" style="display:none" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-title">Add New Branch</div>
+    <div class="modal-label">Branch Name</div>
+    <input class="modal-input" id="branchNameInput" type="text" placeholder="e.g. South Campus" onkeydown="if(event.key==='Enter')saveBranch()" />
+    <div class="modal-label">Color</div>
+    <div class="color-row" id="colorSwatches"></div>
+    <div class="modal-footer">
+      <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-save" onclick="saveBranch()">Add Branch</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+const supabase = createClient(
+  'https://jcckxekjaetwoeilptse.supabase.co',
+  'sb_publishable_20hUKqtjjIPDgdAreDsBTQ_yalRVevL',
+  { auth: { persistSession: true, storageKey: 'magnus-auth', storage: window.localStorage } }
+);
+
+// Auth check
+const { data: { session } } = await supabase.auth.getSession();
+if (!session) { window.location.href = 'login.html'; }
+const { data: profile } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
+if (!profile || profile.role !== 'admin') { window.location.href = 'login.html'; }
+
+document.getElementById('signOutBtn').onclick = async () => {
+  await supabase.auth.signOut(); window.location.href = 'login.html';
+};
+
+const PALETTE = ['#4361ee','#f77f00','#7b2d8b','#2ec4b6','#e63946','#06d6a0','#118ab2','#ef476f','#ffd166','#073b4c'];
+let selectedColor = PALETTE[0];
+
+function fmt(n) { if (!n && n !== 0) return '—'; return '₹' + Number(n).toLocaleString('en-IN'); }
+function showToast(msg) { const t = document.getElementById('toast'); t.textContent = '✓ ' + msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
+
+// Build color swatches
+const sc = document.getElementById('colorSwatches');
+PALETTE.forEach(c => {
+  const s = document.createElement('div');
+  s.className = 'color-swatch' + (c === selectedColor ? ' selected' : '');
+  s.style.background = c;
+  s.onclick = () => {
+    selectedColor = c;
+    document.querySelectorAll('.color-swatch').forEach(sw => sw.classList.toggle('selected', sw.style.background === c));
+  };
+  sc.appendChild(s);
+});
+
+async function loadOverview() {
+  // Load all branches
+  const { data: branches } = await supabase.from('branches').select('*').order('name');
+  if (!branches?.length) {
+    document.getElementById('branchesGrid').innerHTML = '<div class="empty">No branches yet. Add one!</div>';
+    document.getElementById('kpiBranches').textContent = '0';
+    document.getElementById('kpiDepts').textContent = '0';
+    document.getElementById('kpiFields').textContent = '0';
+    document.getElementById('kpiBudget').textContent = '₹0';
+    return;
+  }
+
+  // Load all departments, fields, budget in parallel
+  const [{ data: allDepts }, { data: allFields }, { data: allBudgets }] = await Promise.all([
+    supabase.from('departments').select('branch_name,name,color'),
+    supabase.from('fields').select('branch_name,dept_name'),
+    supabase.from('budget_data').select('branch_name,value').eq('period', 'monthly')
+  ]);
+
+  // Group by branch
+  const deptsByBranch = {};
+  (allDepts || []).forEach(d => {
+    if (!deptsByBranch[d.branch_name]) deptsByBranch[d.branch_name] = [];
+    deptsByBranch[d.branch_name].push(d);
+  });
+
+  const fieldsByBranch = {};
+  (allFields || []).forEach(f => {
+    if (!fieldsByBranch[f.branch_name]) fieldsByBranch[f.branch_name] = 0;
+    fieldsByBranch[f.branch_name]++;
+  });
+
+  const budgetByBranch = {};
+  (allBudgets || []).forEach(r => {
+    if (!budgetByBranch[r.branch_name]) budgetByBranch[r.branch_name] = 0;
+    budgetByBranch[r.branch_name] += Number(r.value);
+  });
+
+  // KPI totals
+  const totalDepts = (allDepts || []).length;
+  const totalFields = (allFields || []).length;
+  const totalBudget = (allBudgets || []).reduce((s, r) => s + Number(r.value), 0);
+  document.getElementById('kpiBranches').textContent = branches.length;
+  document.getElementById('kpiDepts').textContent = totalDepts;
+  document.getElementById('kpiFields').textContent = totalFields;
+  document.getElementById('kpiBudget').textContent = fmt(totalBudget);
+
+  // Render cards
+  const grid = document.getElementById('branchesGrid');
+  grid.innerHTML = branches.map(b => {
+    const depts = deptsByBranch[b.name] || [];
+    const fieldCount = fieldsByBranch[b.name] || 0;
+    const budget = budgetByBranch[b.name] || 0;
+    const color = b.color || '#4361ee';
+
+    const deptPills = depts.slice(0, 3).map(d =>
+      `<span class="dept-pill" style="background:${d.color}18;color:${d.color}">${d.name.charAt(0) + d.name.slice(1).toLowerCase()}</span>`
+    ).join('') + (depts.length > 3 ? `<span class="dept-pill" style="background:var(--bg);color:var(--muted)">+${depts.length - 3} more</span>` : '');
+
+    return `
+      <div class="branch-card">
+        <div class="branch-card-top">
+          <div style="display:flex;align-items:flex-start;flex:1">
+            <div class="branch-dot" style="background:${color}"></div>
+            <div class="branch-name">${b.name}</div>
+          </div>
+          <button class="branch-delete" onclick="deleteBranch('${b.name}')" title="Delete branch">✕</button>
+        </div>
+        <div class="branch-stats">
+          <div class="stat">
+            <div class="stat-val">${depts.length}</div>
+            <div class="stat-label">Departments</div>
+          </div>
+          <div class="stat">
+            <div class="stat-val">${fieldCount}</div>
+            <div class="stat-label">Fields</div>
+          </div>
+          <div class="stat">
+            <div class="stat-val" style="color:${color}">${fmt(budget)}</div>
+            <div class="stat-label">Budget</div>
+          </div>
+        </div>
+        <div class="branch-footer" style="padding-top:14px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+          <div class="dept-pills">${deptPills || '<span style="font-size:11px;color:var(--muted)">No departments yet</span>'}</div>
+        </div>
+        <div class="branch-footer">
+          <span style="font-size:11px;color:var(--muted)">${depts.length} dept${depts.length !== 1 ? 's' : ''} · ${fieldCount} field${fieldCount !== 1 ? 's' : ''}</span>
+          <a class="open-btn" href="admin.html?branch=${encodeURIComponent(b.name)}">Open →</a>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+window.openAddModal = () => {
+  document.getElementById('branchNameInput').value = '';
+  selectedColor = PALETTE[0];
+  document.querySelectorAll('.color-swatch').forEach((s, i) => s.classList.toggle('selected', i === 0));
+  document.getElementById('addModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('branchNameInput').focus(), 50);
+};
+
+window.closeModal = () => document.getElementById('addModal').style.display = 'none';
+
+window.saveBranch = async () => {
+  const name = document.getElementById('branchNameInput').value.trim();
+  if (!name) { alert('Enter a branch name.'); return; }
+  const { error } = await supabase.from('branches').insert({ name, color: selectedColor });
+  if (error) { alert('Error: ' + error.message); return; }
+  closeModal();
+  showToast('Branch added');
+  loadOverview();
+};
+
+window.deleteBranch = async (name) => {
+  if (!confirm(`Delete branch "${name}" and ALL its data? This cannot be undone.`)) return;
+  await Promise.all([
+    supabase.from('branches').delete().eq('name', name),
+    supabase.from('departments').delete().eq('branch_name', name),
+    supabase.from('fields').delete().eq('branch_name', name),
+    supabase.from('budget_data').delete().eq('branch_name', name),
+    supabase.from('actual_data').delete().eq('branch_name', name),
+    supabase.from('collection_data').delete().eq('branch_name', name),
+  ]);
+  showToast('Branch deleted');
+  loadOverview();
+};
+
+loadOverview();
+</script>
+</body>
+</html>
