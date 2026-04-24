@@ -85,7 +85,7 @@ create policy "Admin can manage fields" on public.fields for all using (
 -- Budget data
 create table if not exists public.budget_data (
   id serial primary key,
-  institute_name text not null,
+  institute_name text,
   branch_name text not null,
   dept_name text not null,
   field_key text not null,
@@ -103,7 +103,7 @@ create policy "Admin can manage budget" on public.budget_data for all
 -- Actual data
 create table if not exists public.actual_data (
   id serial primary key,
-  institute_name text not null,
+  institute_name text,
   branch_name text not null,
   dept_name text not null,
   field_key text not null,
@@ -121,7 +121,7 @@ create policy "Branch can insert/update own actual" on public.actual_data for al
 -- Collection data
 create table if not exists public.collection_data (
   id serial primary key,
-  institute_name text not null,
+  institute_name text,
   branch_name text not null,
   period text not null,
   source text check (source in ('SMT','CMT')) not null,
