@@ -568,6 +568,14 @@ async function loadBranchFromDB(branch) {
     DEPTS.length = 0;
     Object.keys(DEPT_COLORS).forEach(k => delete DEPT_COLORS[k]);
     depts.forEach(d => { DEPTS.push(d.name); DEPT_COLORS[d.name] = d.color; });
+  } else {
+    // Seed default departments to DB for this branch
+    const defaultDepts = [
+      {name:'ADMINISTRATIVE',color:'#4361ee'},{name:'OPERATIONS',color:'#f77f00'},
+      {name:'R&D',color:'#7b2d8b'},{name:'MARKETING',color:'#2ec4b6'},{name:'BRANDING',color:'#e63946'}
+    ];
+    const deptRows = defaultDepts.map(d => ({ branch_name: branch, name: d.name, color: d.color, ...(currentInstitute ? {institute_name: currentInstitute} : {}) }));
+    await SB.from('departments').upsert(deptRows, { onConflict: currentInstitute ? 'institute_name,branch_name,name' : 'branch_name,name' });
   }
 
   const { data: fields } = await instFilter(SB.from('fields').select('dept_name,category,subcategory').eq('branch_name', branch).order('sort_order').order('id'));
@@ -577,6 +585,15 @@ async function loadBranchFromDB(branch) {
       if (!ROWS[f.dept_name]) ROWS[f.dept_name] = [];
       ROWS[f.dept_name].push([f.category, f.subcategory]);
     });
+  } else {
+    // Seed default fields to DB for this branch
+    const fieldRows = [];
+    DEPTS.forEach(dept => {
+      (ROWS[dept]||[]).forEach(([cat, sub], i) => {
+        fieldRows.push({ branch_name: branch, dept_name: dept, category: cat, subcategory: sub, sort_order: i, ...(currentInstitute ? {institute_name: currentInstitute} : {}) });
+      });
+    });
+    if (fieldRows.length) await SB.from('fields').insert(fieldRows).catch(() => {});
   }
 
   store.budget = {}; store.actual = {};
