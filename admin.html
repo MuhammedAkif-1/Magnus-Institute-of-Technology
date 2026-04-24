@@ -593,7 +593,6 @@ window.addEventListener('sb-ready', async () => {
   };
   await seedAllBranchesToDB();
   await loadBranchFromDB(currentBranch);
-  // Update label after load to ensure correct branch is shown
   document.getElementById('branchBtnLabel').textContent = currentBranch;
   document.getElementById('branchDot').style.background = BRANCH_COLORS[BRANCH_NAMES.indexOf(currentBranch) % BRANCH_COLORS.length];
   renderSidebar();
@@ -1688,6 +1687,25 @@ BRANCH_NAMES.forEach((b,i)=>{
 
 let currentBranch = BRANCH_NAMES[0];
 
+// Read branch from URL param EARLY before sb-ready fires
+(function(){
+  const _b = new URLSearchParams(window.location.search).get('branch');
+  if (_b && BRANCH_NAMES.includes(_b)) {
+    currentBranch = _b;
+  } else if (_b) {
+    BRANCH_NAMES.push(_b);
+    BRANCH_COLORS.push(PALETTE[BRANCH_NAMES.length % PALETTE.length]);
+    branchData[_b] = {
+      DEPTS: [], DEPT_COLORS: {}, ROWS: {},
+      store: { budget:{}, actual:{}, collection:{monthly:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}},w1:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}},w2:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}},w3:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}},w4:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}}}, headSalary:{monthly:0,w1:0,w2:0,w3:0,w4:0}, directorWithdrawal:{monthly:0,w1:0,w2:0,w3:0,w4:0}, cashBalance:{monthly:0,w1:0,w2:0,w3:0,w4:0} },
+      deptCatFilter:{}, deptSort:{}, currentDept:'DASHBOARD'
+    };
+    currentBranch = _b;
+  }
+  document.getElementById('branchBtnLabel').textContent = currentBranch;
+  document.getElementById('branchDot').style.background = BRANCH_COLORS[BRANCH_NAMES.indexOf(currentBranch) % BRANCH_COLORS.length];
+})();
+
 function B(){ return branchData[currentBranch]; }
 
 function switchBranch(name){
@@ -2001,24 +2019,6 @@ window.renderSidebar = function(){
   _origRenderSidebar();
 };
 
-// Read branch from URL param if present
-const _urlBranch = new URLSearchParams(window.location.search).get('branch');
-if (_urlBranch && BRANCH_NAMES.includes(_urlBranch)) {
-  currentBranch = _urlBranch;
-} else if (_urlBranch) {
-  // Branch not in default list yet — will be loaded from DB
-  BRANCH_NAMES.push(_urlBranch);
-  BRANCH_COLORS.push(PALETTE[BRANCH_NAMES.length % PALETTE.length]);
-  branchData[_urlBranch] = {
-    DEPTS: [], DEPT_COLORS: {}, ROWS: {},
-    store: { budget:{}, actual:{}, collection:{monthly:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}},w1:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}},w2:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}},w3:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}},w4:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}}}, headSalary:{monthly:0,w1:0,w2:0,w3:0,w4:0}, directorWithdrawal:{monthly:0,w1:0,w2:0,w3:0,w4:0}, cashBalance:{monthly:0,w1:0,w2:0,w3:0,w4:0} },
-    deptCatFilter:{}, deptSort:{}, currentDept:'DASHBOARD'
-  };
-  currentBranch = _urlBranch;
-}
-
-document.getElementById('branchBtnLabel').textContent = currentBranch;
-document.getElementById('branchDot').style.background = BRANCH_COLORS[BRANCH_NAMES.indexOf(currentBranch) % BRANCH_COLORS.length];
 getBranchProxy();
 // renderSidebar and render are called by sb-ready event
 // Fallback if Supabase not loaded (local use)
