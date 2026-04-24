@@ -116,6 +116,37 @@
   .toast.show{opacity:1;}
 
   ::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:#d0d3de;border-radius:10px;}
+
+  @media(max-width:768px){
+    .topbar{padding:0 16px;height:52px;}
+    .topbar-title{font-size:14px;}
+    .page{padding:16px 14px;}
+    .page-header{flex-wrap:wrap;gap:10px;}
+    .grand-kpi-row{grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;}
+    .grand-kpi-card{padding:12px 14px;}
+    .grand-kpi-val{font-size:18px;}
+    .grand-kpi-label{font-size:10px;}
+    .institute-header{padding:12px 14px;gap:8px;flex-wrap:wrap;}
+    .institute-name{font-size:13px;min-width:0;}
+    .institute-meta{display:none;}
+    .inst-header-totals{gap:12px;margin-left:0;width:100%;justify-content:space-between;order:3;padding-top:8px;border-top:1px solid var(--border);}
+    .inst-ht-val{font-size:12px;}
+    .institute-actions{order:2;margin-left:auto;gap:6px;}
+    .add-branch-btn{font-size:11px;padding:4px 8px;}
+    .inst-kpi-row{grid-template-columns:1fr 1fr 1fr;gap:8px;padding:14px 14px 4px;}
+    .inst-kpi-val{font-size:16px;}
+    .institute-body{padding:0 14px 16px;}
+    .branches-grid{grid-template-columns:1fr 1fr;gap:10px;}
+    .stat-val{font-size:13px;}
+  }
+
+  @media(max-width:480px){
+    .grand-kpi-row{grid-template-columns:1fr 1fr 1fr;gap:6px;}
+    .grand-kpi-val{font-size:15px;}
+    .branches-grid{grid-template-columns:1fr;}
+    .inst-kpi-row{grid-template-columns:1fr 1fr 1fr;gap:6px;}
+    .inst-kpi-val{font-size:14px;}
+  }
 </style>
 </head>
 <body>
