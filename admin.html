@@ -356,7 +356,7 @@
   <div style="display:flex;align-items:center;gap:8px">
     <button class="sidebar-toggle" onclick="toggleAdminSidebar()">☰</button>
     <div style="display:flex;align-items:center;gap:4px;font-size:13px">
-      <a id="instituteLink" href="index.html" style="font-weight:600;color:var(--admin);text-decoration:none;padding:4px 8px;border-radius:6px;transition:background 0.15s" onmouseover="this.style.background='var(--admin-light)'" onmouseout="this.style.background=''">Institutes</a>
+      <a id="instituteLink" href="index.html" style="font-weight:600;color:var(--admin);text-decoration:none;padding:4px 8px;border-radius:6px;transition:background 0.15s" onmouseover="this.style.background='var(--admin-light)'" onmouseout="this.style.background=''">Businesses</a>
       <span style="color:var(--muted)">/</span>
       <span id="instituteNameDisplay" style="font-weight:600;color:var(--text);padding:4px 8px"></span>
       <span style="color:var(--muted)">/</span>
@@ -548,7 +548,7 @@ window.addEventListener('sb-ready', async () => {
     await SB.auth.signOut(); window.location.href = 'login.html';
   };
   if (currentInstitute) {
-    document.getElementById('instituteLink').textContent = 'Institutes';
+    document.getElementById('instituteLink').textContent = 'Businesses';
     document.getElementById('instituteNameDisplay').textContent = currentInstitute;
   }
   await loadBranchFromDB(currentBranch);
