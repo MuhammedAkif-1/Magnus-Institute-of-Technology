@@ -219,7 +219,6 @@ PALETTE.forEach(c => {
 });
 
 async function loadOverview() {
-  // Load all branches
   const { data: branches } = await supabase.from('branches').select('*').order('name');
   if (!branches?.length) {
     document.getElementById('branchesGrid').innerHTML = '<div class="empty">No branches yet. Add one!</div>';
