@@ -340,12 +340,54 @@
   ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: #d0d3de; border-radius: 10px; }
+
+  /* ---- MOBILE ---- */
+  .sidebar-toggle { display:none; background:none; border:none; cursor:pointer; font-size:22px; padding:4px 8px; color:var(--text); flex-shrink:0; }
+  .sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:150; }
+  .sidebar-overlay.show { display:block; }
+  .table-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+
+  @media(max-width:768px){
+    .topbar { padding: 0 12px; height: 52px; }
+    .topbar-title { font-size: 13px; }
+    .sidebar-toggle { display: block; }
+    .sidebar {
+      position: fixed; top: 52px; left: 0; height: calc(100vh - 52px);
+      z-index: 200; transform: translateX(-100%); transition: transform 0.25s;
+    }
+    .sidebar.open { transform: translateX(0); }
+    .main { height: calc(100vh - 52px); }
+    .content { padding: 14px 12px; }
+    .kpi-row { grid-template-columns: repeat(2,1fr); gap: 10px; }
+    .dash-grid { grid-template-columns: 1fr; }
+    .collection-grid { grid-template-columns: 1fr !important; }
+    .bkd-overlay { padding: 8px; }
+    .bkd-header { padding: 16px; }
+    .bkd-dept-name { font-size: 16px; }
+    .bkd-kpis { grid-template-columns: repeat(2,1fr); padding: 14px 16px; gap: 10px; }
+    .bkd-body { padding: 0 16px 16px; }
+    .table-wrap { overflow-x: auto; }
+    .table-wrap table { min-width: 520px; }
+    .bkd-table { min-width: 480px; }
+    .branch-select-btn { font-size: 12px; padding: 5px 8px; }
+    .mode-tabs { display: none; }
+    .weekly-tabs { flex-wrap: wrap; }
+    td input[type="number"] { width: 90px; }
+    .section-header { flex-wrap: wrap; gap: 8px; }
+  }
+
+  @media(max-width:480px){
+    .kpi-row { grid-template-columns: 1fr 1fr; }
+    .kpi-value { font-size: 16px; }
+    .topbar-title { display: none; }
+  }
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <div style="display:flex;align-items:center;gap:14px">
+  <div style="display:flex;align-items:center;gap:8px">
+    <button class="sidebar-toggle" onclick="toggleAdminSidebar()">☰</button>
     <div class="topbar-title"><span>Magnus</span> Institute of Technology</div>
     <div class="branch-wrap" id="branchWrap">
       <button class="branch-select-btn" onclick="toggleBranchDropdown()" id="branchBtn">
@@ -356,19 +398,21 @@
       <div class="branch-dropdown" id="branchDropdown"></div>
     </div>
   </div>
-  <div style="display:flex;align-items:center;gap:10px">
-    <a href="index.html" style="padding:6px 13px;border-radius:7px;border:1px solid var(--border);background:none;font-family:inherit;font-size:13px;cursor:pointer;color:var(--muted);text-decoration:none" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='none'">← Branches</a>
+  <div style="display:flex;align-items:center;gap:8px">
+    <a href="index.html" style="padding:5px 10px;border-radius:7px;border:1px solid var(--border);background:none;font-family:inherit;font-size:12px;cursor:pointer;color:var(--muted);text-decoration:none;white-space:nowrap">← Branches</a>
     <div class="mode-tabs">
       <button class="mode-tab active" onclick="setMode('monthly')">Monthly</button>
       <button class="mode-tab" onclick="setMode('weekly')">Weekly</button>
     </div>
-    <button id="signOutBtn" style="padding:6px 14px;border-radius:7px;border:1px solid var(--border);background:none;font-family:inherit;font-size:13px;cursor:pointer;color:var(--muted)" onmouseover="this.style.background='#fdecea';this.style.color='var(--red)'" onmouseout="this.style.background='none';this.style.color='var(--muted)'">Sign Out</button>
+    <button id="signOutBtn" style="padding:5px 10px;border-radius:7px;border:1px solid var(--border);background:none;font-family:inherit;font-size:12px;cursor:pointer;color:var(--muted);white-space:nowrap">Sign Out</button>
   </div>
 </div>
 
+<div class="sidebar-overlay" id="adminSidebarOverlay" onclick="toggleAdminSidebar()"></div>
+
 <div class="main">
   <!-- SIDEBAR -->
-  <div class="sidebar">
+  <div class="sidebar" id="adminSidebar">
     <div class="sidebar-section">
       <div class="sidebar-label">Views</div>
       <button class="dept-btn active" data-dept="DASHBOARD" onclick="selectDept('DASHBOARD')">
@@ -814,6 +858,16 @@ function showToast(msg='Saved'){
   setTimeout(()=>t.classList.remove('show'),1800);
 }
 
+function toggleAdminSidebar(){
+  document.getElementById('adminSidebar').classList.toggle('open');
+  document.getElementById('adminSidebarOverlay').classList.toggle('show');
+}
+
+function closeAdminSidebar(){
+  document.getElementById('adminSidebar').classList.remove('open');
+  document.getElementById('adminSidebarOverlay').classList.remove('show');
+}
+
 // ============================================================
 // MODE / DEPT
 // ============================================================
@@ -827,6 +881,7 @@ function selectDept(d){
   document.querySelectorAll('.dept-btn').forEach(b=>{
     b.classList.toggle('active', b.dataset.dept===d);
   });
+  closeAdminSidebar();
   render();
 }
 
