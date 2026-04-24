@@ -255,29 +255,24 @@ window.saveInstitute = async () => {
 };
 
 async function loadOverview() {
-  // Load everything in parallel, gracefully handle missing tables
   const [instRes, branchRes, deptRes, fieldRes, budgetRes, actualRes] = await Promise.all([
     supabase.from('institutes').select('*').order('name'),
     supabase.from('branches').select('*').order('name'),
-    supabase.from('departments').select('institute_name,branch_name,name,color'),
+    supabase.from('departments').select('institute_name,branch_name,name'),
     supabase.from('fields').select('institute_name,branch_name'),
     supabase.from('budget_data').select('institute_name,branch_name,value').eq('period','monthly'),
     supabase.from('actual_data').select('institute_name,branch_name,value').eq('period','monthly')
   ]);
 
-  // If institutes table missing, fall back to hardcoded list
   if (instRes.error) {
-    const hardcoded = [
+    instRes.data = [
       { name: 'Magnus Institute of Technology', color: '#4361ee' },
-      { name: 'Alims School of Business',       color: '#f77f00' },
-      { name: 'MEL Islamic School',             color: '#7b2d8b' },
-      { name: 'M&D Institute',                  color: '#2ec4b6' },
-      { name: 'Merchx',                         color: '#e63946' },
-      { name: 'Aider India',                    color: '#06d6a0' }
+      { name: 'Alims School of Business', color: '#f77f00' },
+      { name: 'MEL Islamic School', color: '#7b2d8b' },
+      { name: 'M&D Institute', color: '#2ec4b6' },
+      { name: 'Merchx', color: '#e63946' },
+      { name: 'Aider India', color: '#06d6a0' }
     ];
-    // Re-run with hardcoded institutes but real branch/dept/field data
-    instRes.data = hardcoded;
-    instRes.error = null;
   }
 
   const institutes = instRes.data || [];
@@ -328,20 +323,19 @@ async function loadOverview() {
     branchesByInstitute[inst].push(b);
   });
 
-  // If no institute_name on branches (old schema), use hardcoded mapping
-  const INST_BRANCH_MAP = {
-    'Magnus Institute of Technology': ['Manjeri','Tirur','Kozhicode','Kannur','Kasaragod','Palakkad','Thrissur','Kollam','Attingal','Marthadam','Allappuzha','Kuttiyadi','Bangalore','Hyderabad'],
-    'Alims School of Business': ['Kozhikode','Ernakulam','Manjeri'],
-    'MEL Islamic School': ['Manjeri'],
-    'M&D Institute': ['Manjeri','Ernakulam'],
-    'Merchx': ['Manjeri'],
-    'Aider India': ['Manjeri']
-  };
   const hasInstCol = branches.some(b => b.institute_name);
   if (!hasInstCol && branches.length) {
     Object.keys(branchesByInstitute).forEach(k => delete branchesByInstitute[k]);
     const branchByName = {};
     branches.forEach(b => { branchByName[b.name] = b; });
+    const INST_BRANCH_MAP = {
+      'Magnus Institute of Technology': ['Manjeri','Tirur','Kozhicode','Kannur','Kasaragod','Palakkad','Thrissur','Kollam','Attingal','Marthadam','Allappuzha','Kuttiyadi','Bangalore','Hyderabad'],
+      'Alims School of Business': ['Kozhikode','Ernakulam','Manjeri'],
+      'MEL Islamic School': ['Manjeri'],
+      'M&D Institute': ['Manjeri','Ernakulam'],
+      'Merchx': ['Manjeri'],
+      'Aider India': ['Manjeri']
+    };
     Object.entries(INST_BRANCH_MAP).forEach(([inst, names]) => {
       branchesByInstitute[inst] = names.map(n => branchByName[n] || { name: n, color: '#4361ee', institute_name: inst });
     });
@@ -466,11 +460,6 @@ loadOverview();
 // Auto-open institute from URL param (e.g. coming back from admin.html)
 const _instParam = new URLSearchParams(window.location.search).get('institute');
 if (_instParam) openInstitute = _instParam;
-const _sb = createClient(
-  'https://jcckxekjaetwoeilptse.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpjY2t4ZWtqYWV0d29laWxwdHNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5Njk3MzMsImV4cCI6MjA5MjU0NTczM30.8P32oelb13Bu9FBlWQXTIfeRS-KQtaX_J8lAvSlpmBk'
-);
-window._dbg = _sb;
 </script>
 </body>
 </html>
