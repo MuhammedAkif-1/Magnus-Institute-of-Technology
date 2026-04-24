@@ -568,6 +568,12 @@
 // ============================================================
 // SUPABASE INIT + AUTH
 // ============================================================
+
+// Read branch from URL param EARLY — must be before sb-ready fires
+// (populated after BRANCH_NAMES/branchData are defined below,
+//  but we store the raw value here and apply it after)
+const _earlyBranch = new URLSearchParams(window.location.search).get('branch');
+
 const _sbScript = document.createElement('script');
 _sbScript.type = 'module';
 _sbScript.textContent = `
@@ -1687,12 +1693,13 @@ BRANCH_NAMES.forEach((b,i)=>{
 
 let currentBranch = BRANCH_NAMES[0];
 
-// Read branch from URL param EARLY before sb-ready fires
+// Apply early-captured URL branch param now that branchData is ready
 (function(){
-  const _b = new URLSearchParams(window.location.search).get('branch');
-  if (_b && BRANCH_NAMES.includes(_b)) {
+  const _b = _earlyBranch;
+  if (!_b) return;
+  if (BRANCH_NAMES.includes(_b)) {
     currentBranch = _b;
-  } else if (_b) {
+  } else {
     BRANCH_NAMES.push(_b);
     BRANCH_COLORS.push(PALETTE[BRANCH_NAMES.length % PALETTE.length]);
     branchData[_b] = {
