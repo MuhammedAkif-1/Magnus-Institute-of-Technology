@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin — Business Overview</title>
+<title>Magnus Business Groups — Overview</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -121,7 +121,7 @@
 <body>
 
 <div class="topbar">
-  <div class="topbar-title"><span>Magnus</span> Admin Portal</div>
+  <div class="topbar-title"><span>Magnus</span> Business Groups</div>
   <div style="display:flex;align-items:center;gap:10px">
     <span style="font-size:12px;font-weight:600;background:var(--admin-light);color:var(--admin);padding:4px 12px;border-radius:20px">Admin</span>
     <button class="sign-out-btn" id="signOutBtn">Sign Out</button>
@@ -134,7 +134,7 @@
       <div class="page-title">Business Overview</div>
       <div class="page-sub">Select a business to view and manage its branches</div>
     </div>
-    <button onclick="openAddInstituteModal()" style="padding:8px 18px;border-radius:8px;border:none;background:var(--admin);color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">＋ Add Institute</button>
+    <button onclick="openAddInstituteModal()" style="padding:8px 18px;border-radius:8px;border:none;background:var(--admin);color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">＋ Add Business</button>
   </div>
   <div class="grand-kpi-row">
     <div class="grand-kpi-card"><div class="grand-kpi-label">Total Budget</div><div class="grand-kpi-val" id="grandBudget" style="color:var(--admin)">—</div></div>
@@ -149,14 +149,14 @@
 <!-- Add Institute Modal -->
 <div class="modal-overlay" id="addInstituteModal" style="display:none" onclick="if(event.target===this)closeInstituteModal()">
   <div class="modal">
-    <div class="modal-title">Add Institute</div>
-    <label class="modal-label">Institute Name</label>
-    <input class="modal-input" id="instituteNameInput" type="text" placeholder="e.g. New College" onkeydown="if(event.key==='Enter')saveInstitute()" />
+    <div class="modal-title">Add Business</div>
+    <label class="modal-label">Business Name</label>
+    <input class="modal-input" id="instituteNameInput" type="text" placeholder="e.g. New Business" onkeydown="if(event.key==='Enter')saveInstitute()" />
     <label class="modal-label">Color</label>
     <div class="color-row" id="instColorSwatches"></div>
     <div class="modal-footer">
       <button class="modal-cancel" onclick="closeInstituteModal()">Cancel</button>
-      <button class="modal-save" onclick="saveInstitute()">Add Institute</button>
+      <button class="modal-save" onclick="saveInstitute()">Add Business</button>
     </div>
   </div>
 </div>
@@ -237,11 +237,11 @@ window.openAddInstituteModal = () => {
 window.closeInstituteModal = () => document.getElementById('addInstituteModal').style.display = 'none';
 window.saveInstitute = async () => {
   const name = document.getElementById('instituteNameInput').value.trim();
-  if (!name) { alert('Enter an institute name.'); return; }
+  if (!name) { alert('Enter a business name.'); return; }
   const { error } = await supabase.from('institutes').insert({ name, color: instSelectedColor });
   if (error) { alert('Error: ' + error.message); return; }
   window.closeInstituteModal();
-  showToast('Institute added');
+  showToast('Business added');
   await loadOverview();
 };
 
