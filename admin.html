@@ -659,49 +659,9 @@ async function saveFieldToDB(dept, cat, sub) {
 // ============================================================
 // DATA STORE
 // ============================================================
-const DEPTS = ['ADMINISTRATIVE','OPERATIONS','R&D','MARKETING','BRANDING'];
-const DEPT_COLORS = {
-  ADMINISTRATIVE: '#4361ee', OPERATIONS: '#f77f00',
-  'R&D': '#7b2d8b', MARKETING: '#2ec4b6', BRANDING: '#e63946'
-};
-
-const ROWS = {
-  ADMINISTRATIVE: [
-    ['Salary','Faculty'],['Salary','SCM'],['Salary','Office Staff'],['Salary','Receptionist'],
-    ['Recruitment','Hiring Cost'],['Travel & Allowance','Food'],['Travel & Allowance','Travel'],
-    ['Office','Office Rent'],['Hostel','Hostel Rent'],['Office','Electricity'],
-    ['Hostel','Hostel Electricity'],['Office','MobileRecharges'],['Office','Internet'],
-    ['Office','Refreshment'],['Office','Stationery'],['Office','Software Subscriptions'],
-    ['Office','Maintenance & Repairs'],['Hostel','Maintenance & Repairs'],
-    ['Office','Cleaning'],['Hostel','Cleaning'],['Office','Water Supply'],
-    ['Hostel','Water Supply'],['Hostel','Food & Mess'],['Hostel','Warden Salary'],
-    ['Hostel','Security'],['Hostel','Housekeeping'],['Infrastructure','Classroom Setup'],
-    ['Student Kit','SMT'],['Student Kit','CMT'],['Student Kit','Trouble shooting']
-  ],
-  OPERATIONS: [
-    ['Student Kit','Tool&Spare'],['Logistics','Courier – Tool Kit'],
-    ['Research','Tools & Software'],['Training','Workshops'],
-    ['Recruitment','Hiring Cost'],['Travel & Allowance','Food'],['Travel & Allowance','Travel']
-  ],
-  'R&D': [
-    ['Salary','R&D staff'],['Advertising','Digital Ads'],['Campaigns','Lead Generation'],
-    ['Events','Seminars/Webinars'],['Recruitment','Hiring Cost'],
-    ['Travel & Allowance','Food'],['Travel & Allowance','Travel']
-  ],
-  MARKETING: [
-    ['Salary','offline Marketing staff'],['Salary','online Marketing staff'],
-    ['Design','Creatives'],['Media','Video Production'],['Promotion','Brand Promotion'],
-    ['Recruitment','Hiring Cost'],['Travel & Allowance','Food'],['Travel & Allowance','Travel']
-  ],
-  BRANDING: [
-    ['Salary','Offline branding staff'],['Salary','Online branding staff'],
-    ['Recruitment','Hiring Cost'],['Travel & Allowance','Food'],['Travel & Allowance','Travel']
-  ]
-};
-
-// Storage: budget[dept][cat][sub][mode] = value
-// mode: 'monthly' | 'w1' | 'w2' | 'w3' | 'w4'
-// actual[dept][cat][sub][mode] = value
+const DEPTS = [];
+const DEPT_COLORS = {};
+const ROWS = {};
 const store = {
   budget: {}, actual: {},
   collection: { monthly: {SMT:{target:0,actual:0}, CMT:{target:0,actual:0}},
@@ -713,16 +673,6 @@ const store = {
   directorWithdrawal: { monthly:0, w1:0, w2:0, w3:0, w4:0 },
   cashBalance: { monthly:0, w1:0, w2:0, w3:0, w4:0 }
 };
-
-// Init store
-DEPTS.forEach(d => {
-  store.budget[d] = {}; store.actual[d] = {};
-  (ROWS[d]||[]).forEach(([cat,sub]) => {
-    const k = cat+'__'+sub;
-    if (!store.budget[d][k]) store.budget[d][k] = {monthly:0,w1:0,w2:0,w3:0,w4:0};
-    if (!store.actual[d][k]) store.actual[d][k] = {monthly:0,w1:0,w2:0,w3:0,w4:0};
-  });
-});
 
 // ============================================================
 // STATE
