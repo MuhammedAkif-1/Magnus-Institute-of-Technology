@@ -230,11 +230,13 @@ async function loadOverview() {
     return;
   }
 
-  // Load all departments, fields, budget in parallel
-  const [{ data: allDepts }, { data: allFields }, { data: allBudgets }] = await Promise.all([
+  // Load all departments, fields, budget, actuals, collection in parallel
+  const [{ data: allDepts }, { data: allFields }, { data: allBudgets }, { data: allActuals }, { data: allCollection }] = await Promise.all([
     supabase.from('departments').select('branch_name,name,color'),
     supabase.from('fields').select('branch_name,dept_name'),
-    supabase.from('budget_data').select('branch_name,value').eq('period', 'monthly')
+    supabase.from('budget_data').select('branch_name,value').eq('period', 'monthly'),
+    supabase.from('actual_data').select('branch_name,value').eq('period', 'monthly'),
+    supabase.from('collection_data').select('branch_name,period,source,target,actual').eq('period','monthly')
   ]);
 
   // Group by branch
@@ -256,10 +258,24 @@ async function loadOverview() {
     budgetByBranch[r.branch_name] += Number(r.value);
   });
 
+  const actualByBranch = {};
+  (allActuals || []).forEach(r => {
+    if (!actualByBranch[r.branch_name]) actualByBranch[r.branch_name] = 0;
+    actualByBranch[r.branch_name] += Number(r.value);
+  });
+
+  const collectionByBranch = {};
+  (allCollection || []).forEach(r => {
+    if (!collectionByBranch[r.branch_name]) collectionByBranch[r.branch_name] = {smtTarget:0,smtActual:0,cmtTarget:0,cmtActual:0};
+    if (r.source === 'SMT') { collectionByBranch[r.branch_name].smtTarget += Number(r.target); collectionByBranch[r.branch_name].smtActual += Number(r.actual); }
+    if (r.source === 'CMT') { collectionByBranch[r.branch_name].cmtTarget += Number(r.target); collectionByBranch[r.branch_name].cmtActual += Number(r.actual); }
+  });
+
   // KPI totals
   const totalDepts = (allDepts || []).length;
   const totalFields = (allFields || []).length;
   const totalBudget = (allBudgets || []).reduce((s, r) => s + Number(r.value), 0);
+  const totalActual = (allActuals || []).reduce((s, r) => s + Number(r.value), 0);
   document.getElementById('kpiBranches').textContent = branches.length;
   document.getElementById('kpiDepts').textContent = totalDepts;
   document.getElementById('kpiFields').textContent = totalFields;
@@ -271,7 +287,11 @@ async function loadOverview() {
     const depts = deptsByBranch[b.name] || [];
     const fieldCount = fieldsByBranch[b.name] || 0;
     const budget = budgetByBranch[b.name] || 0;
+    const actual = actualByBranch[b.name] || 0;
+    const variance = budget - actual;
+    const coll = collectionByBranch[b.name] || {smtTarget:0,smtActual:0,cmtTarget:0,cmtActual:0};
     const color = b.color || '#4361ee';
+    const varColor = variance < 0 ? '#e63946' : '#2dc653';
 
     const deptPills = depts.slice(0, 3).map(d =>
       `<span class="dept-pill" style="background:${d.color}18;color:${d.color}">${d.name.charAt(0) + d.name.slice(1).toLowerCase()}</span>`
@@ -287,20 +307,31 @@ async function loadOverview() {
           <button class="branch-delete" onclick="deleteBranch('${b.name}')" title="Delete branch">✕</button>
         </div>
         <div class="branch-stats">
-          <div class="stat">
-            <div class="stat-val">${depts.length}</div>
-            <div class="stat-label">Departments</div>
-          </div>
-          <div class="stat">
-            <div class="stat-val">${fieldCount}</div>
-            <div class="stat-label">Fields</div>
-          </div>
-          <div class="stat">
-            <div class="stat-val" style="color:${color}">${fmt(budget)}</div>
-            <div class="stat-label">Budget</div>
+          <div class="stat"><div class="stat-val">${depts.length}</div><div class="stat-label">Departments</div></div>
+          <div class="stat"><div class="stat-val">${fieldCount}</div><div class="stat-label">Fields</div></div>
+          <div class="stat"><div class="stat-val" style="color:${color};font-size:13px">${fmt(budget)}</div><div class="stat-label">Budget</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;padding:10px 20px;gap:10px;border-bottom:1px solid var(--border)">
+          <div class="stat"><div class="stat-val" style="font-size:13px;color:#2dc653">${fmt(actual)}</div><div class="stat-label">Actual</div></div>
+          <div class="stat"><div class="stat-val" style="font-size:13px;color:${varColor}">${fmt(Math.abs(variance))}</div><div class="stat-label">${variance>=0?'Under':'Over'}</div></div>
+          <div class="stat"><div class="stat-val" style="font-size:12px;color:var(--muted)">${budget?Math.round((actual/budget)*100)+'%':'—'}</div><div class="stat-label">Used</div></div>
+        </div>
+        <div style="padding:10px 20px;border-bottom:1px solid var(--border)">
+          <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">Collection</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div style="background:#eef1fd;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;font-weight:700;color:#4361ee;margin-bottom:4px">SMT</div>
+              <div style="font-size:11px;color:var(--muted)">Target: <span style="font-weight:700;color:var(--text)">${fmt(coll.smtTarget)}</span></div>
+              <div style="font-size:11px;color:var(--muted)">Actual: <span style="font-weight:700;color:${coll.smtActual>coll.smtTarget?'#e63946':'#2dc653'}">${fmt(coll.smtActual)}</span></div>
+            </div>
+            <div style="background:#fff4e8;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;font-weight:700;color:#f77f00;margin-bottom:4px">CMT</div>
+              <div style="font-size:11px;color:var(--muted)">Target: <span style="font-weight:700;color:var(--text)">${fmt(coll.cmtTarget)}</span></div>
+              <div style="font-size:11px;color:var(--muted)">Actual: <span style="font-weight:700;color:${coll.cmtActual>coll.cmtTarget?'#e63946':'#2dc653'}">${fmt(coll.cmtActual)}</span></div>
+            </div>
           </div>
         </div>
-        <div class="branch-footer" style="padding-top:14px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+        <div class="branch-footer" style="padding-top:10px;padding-bottom:8px;border-bottom:1px solid var(--border)">
           <div class="dept-pills">${deptPills || '<span style="font-size:11px;color:var(--muted)">No departments yet</span>'}</div>
         </div>
         <div class="branch-footer">

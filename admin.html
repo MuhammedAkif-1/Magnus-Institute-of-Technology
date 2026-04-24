@@ -428,7 +428,14 @@
       <button class="dept-btn" data-dept="COLLECTION" onclick="selectDept('COLLECTION')">
         <span class="dot" style="background:#2dc653"></span> Collection Analysis
       </button>
-
+    </div>
+    <div style="padding:8px 12px;display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--border);margin-top:4px">
+      <div class="sidebar-label" style="padding:8px 0 4px">Excel</div>
+      <button onclick="downloadExcel()" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;border:1.5px solid #2dc653;border-radius:7px;background:#e8f9ed;color:#2dc653;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">⬇ Download Template</button>
+      <label style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;border:1.5px solid var(--admin);border-radius:7px;background:var(--admin-light);color:var(--admin);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">
+        ⬆ Upload Filled Excel
+        <input type="file" id="excelUpload" accept=".xlsx,.xls" style="display:none" onchange="uploadExcel(this)" />
+      </label>
     </div>
   </div>
 
@@ -555,6 +562,8 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script>
 // ============================================================
 // SUPABASE INIT + AUTH
@@ -1762,6 +1771,182 @@ function saveNewBranch(){
   closeAddBranchModal();
   switchBranch(name);
   showToast('Branch added');
+}
+
+// ============================================================
+// EXCEL DOWNLOAD (ExcelJS with full colour support)
+// ============================================================
+async function downloadExcel() {
+  const branch = currentBranch;
+  const depts = window.DEPTS;
+  const rows = window.ROWS;
+  const budget = window.store.budget;
+
+  const workbook = new ExcelJS.Workbook();
+  const ws = workbook.addWorksheet(branch, { views:[{showGridLines:false}] });
+
+  ws.columns = [
+    {width:18},{width:20},{width:24},{width:16},{width:16},
+    {width:3},
+    {width:18},{width:20},{width:24},{width:13},{width:13},{width:13},{width:13},{width:13},{width:13},{width:13},{width:13}
+  ];
+
+  const DARK='1F2D5A', MED='3A4A8A', DEPT='4A5899', ROW='C5CAE9', YEL='FFF9C4', GRN='E8F5E9', WHITE='FFFFFF';
+
+  const border = {
+    top:{style:'thin',color:{argb:'FF9E9E9E'}},
+    left:{style:'thin',color:{argb:'FF9E9E9E'}},
+    bottom:{style:'thin',color:{argb:'FF9E9E9E'}},
+    right:{style:'thin',color:{argb:'FF9E9E9E'}}
+  };
+
+  function s(cell, bg, fg, bold, sz) {
+    cell.fill = {type:'pattern',pattern:'solid',fgColor:{argb:'FF'+bg}};
+    cell.font = {bold:!!bold,color:{argb:'FF'+(fg||'000000')},size:sz||10,name:'Calibri'};
+    cell.alignment = {horizontal:'center',vertical:'middle',wrapText:true};
+    cell.border = border;
+  }
+
+  // Row 1: Section titles
+  const r1 = ws.addRow([]); r1.height = 22;
+  ws.mergeCells(r1.number,1,r1.number,5);
+  ws.mergeCells(r1.number,7,r1.number,22);
+  r1.getCell(1).value='MONTHLY ACTUAL EXPENSE'; s(r1.getCell(1),DARK,WHITE,true,12);
+  [2,3,4,5].forEach(c=>s(r1.getCell(c),DARK,WHITE,true));
+  s(r1.getCell(6),WHITE,WHITE);
+  r1.getCell(7).value='WEEKLY ACTUAL EXPENSE'; s(r1.getCell(7),DARK,WHITE,true,12);
+  for(let c=8;c<=22;c++) s(r1.getCell(c),DARK,WHITE,true);
+
+  // Row 2: Column headers
+  const r2 = ws.addRow([]); r2.height = 28;
+  ['DEPARTMENT','EXPENSE CATEGORY','SUB CATEGORY','MONTHLY BUDGET','MONTHLY ACTUAL'].forEach((v,i)=>{
+    r2.getCell(i+1).value=v; s(r2.getCell(i+1),MED,WHITE,true);
+  });
+  s(r2.getCell(6),WHITE,WHITE);
+  ['DEPARTMENT','EXPENSE CATEGORY','SUB CATEGORY'].forEach((v,i)=>{
+    r2.getCell(7+i).value=v; s(r2.getCell(7+i),MED,WHITE,true);
+  });
+  // Week group headers: W1(10-11), W2(12-13), W3(14-15), W4(16-17)
+  [[10,'WEEK-1'],[12,'WEEK-2'],[14,'WEEK-3'],[16,'WEEK-4']].forEach(([col,label])=>{
+    ws.mergeCells(r2.number,col,r2.number,col+1);
+    r2.getCell(col).value=label; s(r2.getCell(col),MED,WHITE,true);
+    s(r2.getCell(col+1),MED,WHITE,true);
+  });
+
+  // Row 3: Budget/Actual sub-headers for weekly
+  const r3 = ws.addRow([]); r3.height = 20;
+  [1,2,3,4,5,6,7,8,9].forEach(c=>s(r3.getCell(c),ROW,'000000'));
+  for(let w=0;w<4;w++){
+    const col = 10 + w*2;
+    r3.getCell(col).value='Budget';   s(r3.getCell(col),YEL,'000000',true);
+    r3.getCell(col+1).value='Actual'; s(r3.getCell(col+1),GRN,'000000',true);
+  }
+
+  // Data rows
+  depts.forEach(dept => {
+    const fields = rows[dept] || [];
+    const startRow = ws.rowCount + 1;
+    fields.forEach(([cat, sub], i) => {
+      const key = cat+'__'+sub;
+      const mb = (budget[dept]&&budget[dept][key]) ? (budget[dept][key].monthly||0) : 0;
+      const wb1 = (budget[dept]&&budget[dept][key]) ? (budget[dept][key].w1||0) : 0;
+      const wb2 = (budget[dept]&&budget[dept][key]) ? (budget[dept][key].w2||0) : 0;
+      const wb3 = (budget[dept]&&budget[dept][key]) ? (budget[dept][key].w3||0) : 0;
+      const wb4 = (budget[dept]&&budget[dept][key]) ? (budget[dept][key].w4||0) : 0;
+      const r = ws.addRow([]); r.height = 18;
+      // Monthly
+      if(i===0) r.getCell(1).value=dept; s(r.getCell(1),DEPT,WHITE,true);
+      r.getCell(2).value=cat; s(r.getCell(2),ROW,'000000');
+      r.getCell(3).value=sub; s(r.getCell(3),ROW,'000000');
+      r.getCell(4).value=mb||''; s(r.getCell(4),YEL,'000000');
+      r.getCell(5).value=''; s(r.getCell(5),GRN,'000000');
+      s(r.getCell(6),WHITE,WHITE);
+      // Weekly
+      if(i===0) r.getCell(7).value=dept; s(r.getCell(7),DEPT,WHITE,true);
+      r.getCell(8).value=cat; s(r.getCell(8),ROW,'000000');
+      r.getCell(9).value=sub; s(r.getCell(9),ROW,'000000');
+      [[wb1,10],[wb2,12],[wb3,14],[wb4,16]].forEach(([bv,col])=>{
+        r.getCell(col).value=bv||'';   s(r.getCell(col),YEL,'000000');
+        r.getCell(col+1).value=''; s(r.getCell(col+1),GRN,'000000');
+      });
+    });
+    if(fields.length>1){
+      ws.mergeCells(startRow,1,startRow+fields.length-1,1);
+      ws.mergeCells(startRow,7,startRow+fields.length-1,7);
+      s(ws.getCell(startRow,1),DEPT,WHITE,true);
+      s(ws.getCell(startRow,7),DEPT,WHITE,true);
+    }
+  });
+
+  const buf = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`${branch}_Budget_Template.xlsx`; a.click();
+  showToast('Excel downloaded');
+}
+
+// ============================================================
+// EXCEL UPLOAD
+// ============================================================
+async function uploadExcel(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const wb = XLSX.read(e.target.result, { type: 'array' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const data = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+    // Parse rows — skip 3 header rows
+    const upserts_monthly = [];
+    const upserts_w1 = [], upserts_w2 = [], upserts_w3 = [], upserts_w4 = [];
+
+    let lastMonthlyDept = '', lastWeeklyDept = '';
+
+    for (let i = 3; i < data.length; i++) {
+      const row = data[i];
+      // Monthly section: cols 0-4
+      const mDept = String(row[0]||'').trim() || lastMonthlyDept;
+      const mCat  = String(row[1]||'').trim();
+      const mSub  = String(row[2]||'').trim();
+      const mAct  = Number(row[4]) || 0;
+      if (mDept) lastMonthlyDept = mDept;
+      if (mCat && mSub) {
+        upserts_monthly.push({
+          branch_name: currentBranch, dept_name: mDept,
+          field_key: mCat + '__' + mSub, period: 'monthly',
+          value: mAct, updated_at: new Date().toISOString()
+        });
+      }
+
+      // Weekly section: cols 6-12
+      const wDept = String(row[6]||'').trim() || lastWeeklyDept;
+      const wCat  = String(row[7]||'').trim();
+      const wSub  = String(row[8]||'').trim();
+      if (wDept) lastWeeklyDept = wDept;
+      if (wCat && wSub) {
+        const base = { branch_name: currentBranch, dept_name: wDept, field_key: wCat+'__'+wSub, updated_at: new Date().toISOString() };
+        // cols: w1 budget=9, w1 actual=10, w2 budget=11, w2 actual=12, w3 budget=13, w3 actual=14, w4 budget=15, w4 actual=16
+        upserts_w1.push({...base, period:'w1', value: Number(row[10])||0});
+        upserts_w2.push({...base, period:'w2', value: Number(row[12])||0});
+        upserts_w3.push({...base, period:'w3', value: Number(row[14])||0});
+        upserts_w4.push({...base, period:'w4', value: Number(row[16])||0});
+      }
+    }
+
+    // Upsert all to Supabase in chunks
+    const all = [...upserts_monthly, ...upserts_w1, ...upserts_w2, ...upserts_w3, ...upserts_w4];
+    for (let i = 0; i < all.length; i += 500) {
+      const { error } = await SB.from('actual_data').upsert(all.slice(i, i+500), { onConflict: 'branch_name,dept_name,field_key,period' });
+      if (error) { alert('Upload error: ' + error.message); input.value=''; return; }
+    }
+
+    input.value = '';
+    showToast('Excel uploaded & saved');
+    await loadBranchFromDB(currentBranch);
+    renderSidebar();
+    render();
+  };
+  reader.readAsArrayBuffer(file);
 }
 
 // close dropdown when clicking outside
