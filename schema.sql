@@ -96,9 +96,9 @@ create table if not exists public.budget_data (
 );
 alter table public.budget_data enable row level security;
 create policy "All authenticated can read budget" on public.budget_data for select using (auth.role() = 'authenticated');
-create policy "Admin can manage budget" on public.budget_data for all using (
-  exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
-);
+create policy "Admin can manage budget" on public.budget_data for all
+  using (exists (select 1 from public.profiles where id = auth.uid() and role = 'admin'))
+  with check (exists (select 1 from public.profiles where id = auth.uid() and role = 'admin'));
 
 -- Actual data
 create table if not exists public.actual_data (
@@ -114,9 +114,9 @@ create table if not exists public.actual_data (
 );
 alter table public.actual_data enable row level security;
 create policy "All authenticated can read actual" on public.actual_data for select using (auth.role() = 'authenticated');
-create policy "Branch can insert/update own actual" on public.actual_data for all using (
-  exists (select 1 from public.profiles where id = auth.uid() and (role = 'admin' or (institute_name = actual_data.institute_name and branch_name = actual_data.branch_name)))
-);
+create policy "Branch can insert/update own actual" on public.actual_data for all
+  using (exists (select 1 from public.profiles where id = auth.uid() and (role = 'admin' or (institute_name = actual_data.institute_name and branch_name = actual_data.branch_name))))
+  with check (exists (select 1 from public.profiles where id = auth.uid() and (role = 'admin' or (institute_name = actual_data.institute_name and branch_name = actual_data.branch_name))));
 
 -- Collection data
 create table if not exists public.collection_data (
@@ -132,9 +132,9 @@ create table if not exists public.collection_data (
 );
 alter table public.collection_data enable row level security;
 create policy "All authenticated can read collection" on public.collection_data for select using (auth.role() = 'authenticated');
-create policy "Branch can manage own collection" on public.collection_data for all using (
-  exists (select 1 from public.profiles where id = auth.uid() and (role = 'admin' or (institute_name = collection_data.institute_name and branch_name = collection_data.branch_name)))
-);
+create policy "Branch can manage own collection" on public.collection_data for all
+  using (exists (select 1 from public.profiles where id = auth.uid() and (role = 'admin' or (institute_name = collection_data.institute_name and branch_name = collection_data.branch_name))))
+  with check (exists (select 1 from public.profiles where id = auth.uid() and (role = 'admin' or (institute_name = collection_data.institute_name and branch_name = collection_data.branch_name))));
 
 -- ============================================================
 -- SEED DATA
