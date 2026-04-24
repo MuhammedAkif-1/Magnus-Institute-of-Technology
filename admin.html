@@ -591,10 +591,11 @@ window.addEventListener('sb-ready', async () => {
   document.getElementById('signOutBtn').onclick = async () => {
     await SB.auth.signOut(); window.location.href = 'login.html';
   };
-  // Seed all branches to Supabase on first load
   await seedAllBranchesToDB();
-  // Load initial branch data from Supabase
   await loadBranchFromDB(currentBranch);
+  // Update label after load to ensure correct branch is shown
+  document.getElementById('branchBtnLabel').textContent = currentBranch;
+  document.getElementById('branchDot').style.background = BRANCH_COLORS[BRANCH_NAMES.indexOf(currentBranch) % BRANCH_COLORS.length];
   renderSidebar();
   render();
 });
