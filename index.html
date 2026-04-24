@@ -331,17 +331,6 @@ async function loadOverview() {
   document.getElementById('grandVariance').textContent = grandBudget||grandActual ? (grandVar>0?'+':'')+fmtShort(grandVar) : '—';
   document.getElementById('grandVariance').style.color = grandVar < 0 ? 'var(--red)' : grandVar > 0 ? 'var(--green)' : 'var(--muted)';
 
-  if (instRes.error) {
-    instRes.data = [
-      { name: 'Magnus Institute of Technology', color: '#4361ee' },
-      { name: 'Alims School of Business', color: '#f77f00' },
-      { name: 'MEL Islamic School', color: '#7b2d8b' },
-      { name: 'M&D Institute', color: '#2ec4b6' },
-      { name: 'Merchx', color: '#e63946' },
-      { name: 'Aider India', color: '#06d6a0' }
-    ];
-  }
-
   const institutes = instRes.data || [];
   const branches = branchRes.data || [];
   const depts = deptRes.data || [];
@@ -419,6 +408,7 @@ async function loadOverview() {
         </div>
         <div class="institute-actions" onclick="event.stopPropagation()">
           <button class="add-branch-btn" onclick="openAddBranchModal('${inst.name.replace(/'/g,"\\'")}')">＋ Add Branch</button>
+          <button class="add-branch-btn" style="border-color:#fdecea;color:var(--red)" onclick="deleteBusiness('${inst.name.replace(/'/g,"\\'")}')">✕ Delete</button>
         </div>
       </div>
       <div class="institute-body ${isOpen?'open':''}">
@@ -432,6 +422,24 @@ async function loadOverview() {
     list.appendChild(block);
   });
 }
+
+window.deleteBusiness = async (name) => {
+  if (!confirm(`Delete "${name}" and ALL its branches and data? This cannot be undone.`)) return;
+  const { data: branches } = await supabase.from('branches').select('name').eq('institute_name', name);
+  const branchNames = (branches || []).map(b => b.name);
+  const deletes = [
+    supabase.from('institutes').delete().eq('name', name),
+    supabase.from('branches').delete().eq('institute_name', name),
+    supabase.from('departments').delete().eq('institute_name', name),
+    supabase.from('fields').delete().eq('institute_name', name),
+    supabase.from('budget_data').delete().eq('institute_name', name),
+    supabase.from('actual_data').delete().eq('institute_name', name),
+    supabase.from('collection_data').delete().eq('institute_name', name),
+  ];
+  await Promise.all(deletes);
+  showToast('Business deleted');
+  await loadOverview();
+};
 
 window.toggleInstitute = async (name) => {
   const wasOpen = openInstitute === name;
