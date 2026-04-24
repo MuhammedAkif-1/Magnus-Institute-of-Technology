@@ -561,7 +561,7 @@ window.addEventListener('sb-ready', async () => {
 async function loadBranchFromDB(branch) {
   if (!window.SB) return;
 
-  const instFilter = q => currentInstitute ? q.eq('institute_name', currentInstitute) : q;
+  const instFilter = q => currentInstitute ? q.eq('institute_name', currentInstitute).eq('branch_name', branch) : q.eq('branch_name', branch);
 
   const { data: depts } = await instFilter(SB.from('departments').select('name,color').eq('branch_name', branch));
   if (depts && depts.length) {
@@ -625,35 +625,26 @@ async function loadBranchFromDB(branch) {
 async function saveValToDB(type, dept, key, period, val) {
   if (!window.SB || !currentBranch) return;
   const table = type === 'budget' ? 'budget_data' : 'actual_data';
-  const payload = { branch_name: currentBranch, dept_name: dept, field_key: key, period, value: val, updated_at: new Date().toISOString() };
-  if (currentInstitute) payload.institute_name = currentInstitute;
-  const conflict = currentInstitute ? 'institute_name,branch_name,dept_name,field_key,period' : 'branch_name,dept_name,field_key,period';
-  const { error } = await SB.from(table).upsert(payload, { onConflict: conflict });
+  const payload = { institute_name: currentInstitute, branch_name: currentBranch, dept_name: dept, field_key: key, period, value: val, updated_at: new Date().toISOString() };
+  const { error } = await SB.from(table).upsert(payload, { onConflict: 'institute_name,branch_name,dept_name,field_key,period' });
   if (error) console.error('SAVE ERROR:', error.message);
   else showToast('Saved');
 }
 
 async function saveCollectionToDB(period, source, target, actual) {
   if (!window.SB) return;
-  const payload = { branch_name: currentBranch, period, source, target, actual, updated_at: new Date().toISOString() };
-  if (currentInstitute) payload.institute_name = currentInstitute;
-  const conflict = currentInstitute ? 'institute_name,branch_name,period,source' : 'branch_name,period,source';
-  await SB.from('collection_data').upsert(payload, { onConflict: conflict });
+  const payload = { institute_name: currentInstitute, branch_name: currentBranch, period, source, target, actual, updated_at: new Date().toISOString() };
+  await SB.from('collection_data').upsert(payload, { onConflict: 'institute_name,branch_name,period,source' });
 }
 
 async function saveDeptToDB(dept, color) {
   if (!window.SB) return;
-  const payload = { branch_name: currentBranch, name: dept, color };
-  if (currentInstitute) payload.institute_name = currentInstitute;
-  const conflict = currentInstitute ? 'institute_name,branch_name,name' : 'branch_name,name';
-  await SB.from('departments').upsert(payload, { onConflict: conflict });
+  await SB.from('departments').upsert({ institute_name: currentInstitute, branch_name: currentBranch, name: dept, color }, { onConflict: 'institute_name,branch_name,name' });
 }
 
 async function saveFieldToDB(dept, cat, sub) {
   if (!window.SB) return;
-  const payload = { branch_name: currentBranch, dept_name: dept, category: cat, subcategory: sub };
-  if (currentInstitute) payload.institute_name = currentInstitute;
-  await SB.from('fields').insert(payload);
+  await SB.from('fields').insert({ institute_name: currentInstitute, branch_name: currentBranch, dept_name: dept, category: cat, subcategory: sub });
 }
 
 // ============================================================
