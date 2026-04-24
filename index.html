@@ -17,40 +17,40 @@
 
   .topbar {
     background: var(--white); border-bottom: 1px solid var(--border);
-    padding: 0 32px; height: 60px; display: flex; align-items: center;
+    padding: 0 16px; height: 60px; display: flex; align-items: center;
     justify-content: space-between; position: sticky; top: 0; z-index: 100;
   }
-  .topbar-title { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+  .topbar-title { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
   .topbar-title span { color: var(--admin); }
   .sign-out-btn {
-    padding: 6px 14px; border-radius: 7px; border: 1px solid var(--border);
-    background: none; font-family: inherit; font-size: 13px; cursor: pointer; color: var(--muted);
+    padding: 6px 12px; border-radius: 7px; border: 1px solid var(--border);
+    background: none; font-family: inherit; font-size: 12px; cursor: pointer; color: var(--muted);
   }
   .sign-out-btn:hover { background: #fdecea; color: var(--red); border-color: #fdecea; }
 
-  .page { max-width: 1200px; margin: 0 auto; padding: 32px 28px; }
+  .page { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
 
-  .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
-  .page-title { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
+  .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; gap: 10px; flex-wrap: wrap; }
+  .page-title { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
   .page-sub { font-size: 13px; color: var(--muted); margin-top: 3px; }
 
   .add-btn {
-    display: flex; align-items: center; gap: 7px; padding: 9px 20px;
+    display: flex; align-items: center; gap: 7px; padding: 9px 16px;
     border-radius: 9px; border: none; background: var(--admin); color: #fff;
-    font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 0.15s;
+    font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; white-space: nowrap;
   }
   .add-btn:hover { opacity: 0.88; }
 
-  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 32px; }
-  .kpi-card { background: var(--white); border-radius: 12px; padding: 18px 20px; border: 1px solid var(--border); box-shadow: var(--shadow); }
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+  .kpi-card { background: var(--white); border-radius: 12px; padding: 16px; border: 1px solid var(--border); box-shadow: var(--shadow); }
   .kpi-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
-  .kpi-value { font-size: 24px; font-weight: 700; font-family: 'DM Mono', monospace; letter-spacing: -1px; }
+  .kpi-value { font-size: 22px; font-weight: 700; font-family: 'DM Mono', monospace; letter-spacing: -1px; }
   .kpi-value.blue { color: var(--admin); }
   .kpi-value.green { color: var(--green); }
 
   .section-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
 
-  .branches-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+  .branches-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
 
   .branch-card {
     background: var(--white); border-radius: 14px; border: 1px solid var(--border);
@@ -122,6 +122,13 @@
   .toast.show { opacity: 1; }
 
   ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: #d0d3de; border-radius: 10px; }
+
+  @media(max-width:640px){
+    .topbar-title { font-size: 13px; }
+    .kpi-row { grid-template-columns: repeat(2, 1fr); }
+    .page { padding: 16px 12px; }
+    .branches-grid { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
