@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head><title>DB Debug</title></head>
+<body style="font-family:monospace;padding:20px;background:#1a1d2e;color:#fff">
+<h2>Supabase Debug</h2>
+<button onclick="check()" style="padding:10px 20px;font-size:14px;cursor:pointer">Check Database</button>
+<pre id="output" style="margin-top:20px;background:#000;padding:20px;border-radius:8px;overflow:auto"></pre>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+const SB = createClient('https://jcckxekjaetwoeilptse.supabase.co', 'sb_publishable_20hUKqtjjIPDgdAreDsBTQ_yalRVevL');
+
+window.check = async () => {
+  const out = document.getElementById('output');
+  out.textContent = 'Checking...';
+  
+  const results = {};
+  
+  // Check auth
+  const { data: { session } } = await SB.auth.getSession();
+  results.auth = session ? 'Logged in as: ' + session.user.email : 'Not logged in';
+  
+  // Check tables
+  const tables = ['branches', 'departments', 'fields', 'budget_data', 'actual_data', 'collection_data'];
+  for (const t of tables) {
+    const { data, error } = await SB.from(t).select('*').limit(3);
+    results[t] = error ? 'ERROR: ' + error.message : `${data?.length || 0} rows (sample: ${JSON.stringify(data?.[0] || {})})`;
+  }
+  
+  // Test insert
+  const testBranch = 'TEST_' + Date.now();
+  const { error: insErr } = await SB.from('actual_data').insert({
+    branch_name: testBranch,
+    dept_name: 'TEST',
+    field_key: 'test__test',
+    period: 'monthly',
+    value: 100
+  });
+  results.test_insert = insErr ? 'FAILED: ' + insErr.message : 'SUCCESS';
+  
+  // Clean up
+  await SB.from('actual_data').delete().eq('branch_name', testBranch);
+  
+  out.textContent = JSON.stringify(results, null, 2);
+};
+</script>
+</body>
+</html>

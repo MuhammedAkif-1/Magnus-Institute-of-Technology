@@ -38,39 +38,6 @@
     min-height: 100vh;
   }
 
-  /* ---- BRANCH DROPDOWN ---- */
-  .branch-wrap { position: relative; display: flex; align-items: center; gap: 8px; }
-  .branch-select-btn {
-    display: flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 8px;
-    border: 1.5px solid var(--border); background: var(--bg); cursor: pointer;
-    font-family: inherit; font-size: 13px; font-weight: 600; color: var(--text); transition: all 0.15s;
-  }
-  .branch-select-btn:hover { border-color: var(--admin); background: var(--admin-light); color: var(--admin); }
-  .branch-select-btn .branch-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--admin); flex-shrink: 0; }
-  .branch-dropdown {
-    display: none; position: absolute; top: calc(100% + 6px); left: 0; min-width: 200px;
-    background: var(--white); border: 1px solid var(--border); border-radius: 10px;
-    box-shadow: var(--shadow-lg); z-index: 300; overflow: hidden;
-  }
-  .branch-dropdown.open { display: block; }
-  .branch-option {
-    display: flex; align-items: center; gap: 10px; padding: 10px 14px;
-    cursor: pointer; font-size: 13px; font-weight: 500; transition: background 0.12s;
-  }
-  .branch-option:hover { background: var(--bg); }
-  .branch-option.active { background: var(--admin-light); color: var(--admin); font-weight: 600; }
-  .branch-option-del {
-    margin-left: auto; background: none; border: none; cursor: pointer; color: var(--muted);
-    font-size: 13px; padding: 2px 5px; border-radius: 4px; transition: color 0.15s;
-  }
-  .branch-option-del:hover { color: var(--red); }
-  .branch-add-row {
-    display: flex; align-items: center; gap: 8px; padding: 10px 14px; cursor: pointer;
-    font-size: 13px; font-weight: 500; color: var(--admin); border-top: 1px solid var(--border);
-    transition: background 0.12s;
-  }
-  .branch-add-row:hover { background: var(--admin-light); }
-
   /* ---- TOP BAR ---- */
   .topbar {
     background: var(--white);
@@ -388,18 +355,18 @@
 <div class="topbar">
   <div style="display:flex;align-items:center;gap:8px">
     <button class="sidebar-toggle" onclick="toggleAdminSidebar()">☰</button>
-    <div class="topbar-title"><span>Magnus</span> Institute of Technology</div>
-    <div class="branch-wrap" id="branchWrap">
-      <button class="branch-select-btn" onclick="toggleBranchDropdown()" id="branchBtn">
-        <span class="branch-dot" id="branchDot"></span>
-        <span id="branchBtnLabel">Manjeri</span>
-        <span style="font-size:10px;color:var(--muted)">▾</span>
-      </button>
-      <div class="branch-dropdown" id="branchDropdown"></div>
+    <div style="display:flex;align-items:center;gap:4px;font-size:13px">
+      <a id="instituteLink" href="index.html" style="font-weight:600;color:var(--admin);text-decoration:none;padding:4px 8px;border-radius:6px;transition:background 0.15s" onmouseover="this.style.background='var(--admin-light)'" onmouseout="this.style.background=''">Institutes</a>
+      <span style="color:var(--muted)">/</span>
+      <span id="instituteNameDisplay" style="font-weight:600;color:var(--text);padding:4px 8px"></span>
+      <span style="color:var(--muted)">/</span>
+      <div style="display:flex;align-items:center;gap:6px;padding:4px 8px">
+        <span id="branchDot" style="width:8px;height:8px;border-radius:50%;background:var(--admin);flex-shrink:0"></span>
+        <span id="branchBtnLabel" style="font-weight:600;color:var(--text)"></span>
+      </div>
     </div>
   </div>
   <div style="display:flex;align-items:center;gap:8px">
-    <a href="index.html" style="padding:5px 10px;border-radius:7px;border:1px solid var(--border);background:none;font-family:inherit;font-size:12px;cursor:pointer;color:var(--muted);text-decoration:none;white-space:nowrap">← Branches</a>
     <div class="mode-tabs">
       <button class="mode-tab active" onclick="setMode('monthly')">Monthly</button>
       <button class="mode-tab" onclick="setMode('weekly')">Weekly</button>
@@ -457,23 +424,6 @@
     </div>
     <div class="bkd-kpis" id="breakdownKpis"></div>
     <div class="bkd-body" id="breakdownBody"></div>
-  </div>
-</div>
-
-<!-- ADD BRANCH MODAL -->
-<div class="modal-overlay" id="addBranchModal" style="display:none" onclick="if(event.target===this)closeAddBranchModal()">
-  <div class="modal" style="width:360px">
-    <div class="modal-title">Add New Branch</div>
-    <div class="modal-body">
-      <div class="modal-field">
-        <div class="modal-label">Branch Name</div>
-        <input class="modal-input" id="newBranchName" type="text" placeholder="e.g. South Campus" onkeydown="if(event.key==='Enter')saveNewBranch()" />
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="modal-cancel" onclick="closeAddBranchModal()">Cancel</button>
-      <button class="modal-save" onclick="saveNewBranch()">Add Branch</button>
-    </div>
   </div>
 </div>
 
@@ -565,14 +515,14 @@
 <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script>
-// ============================================================
-// SUPABASE INIT + AUTH
-// ============================================================
-
-// Read branch from URL param EARLY — must be before sb-ready fires
-// (populated after BRANCH_NAMES/branchData are defined below,
-//  but we store the raw value here and apply it after)
+// Read URL params immediately
 const _earlyBranch = new URLSearchParams(window.location.search).get('branch');
+const _earlyInstitute = new URLSearchParams(window.location.search).get('institute');
+// Set breadcrumb right away before any async code
+if (_earlyBranch) document.getElementById('branchBtnLabel').textContent = _earlyBranch;
+if (_earlyInstitute) document.getElementById('instituteNameDisplay').textContent = _earlyInstitute;
+let currentInstitute = _earlyInstitute || '';
+const currentBranch = _earlyBranch || 'Manjeri';
 
 const _sbScript = document.createElement('script');
 _sbScript.type = 'module';
@@ -597,155 +547,99 @@ window.addEventListener('sb-ready', async () => {
   document.getElementById('signOutBtn').onclick = async () => {
     await SB.auth.signOut(); window.location.href = 'login.html';
   };
-  await seedAllBranchesToDB();
+  if (currentInstitute) {
+    document.getElementById('instituteLink').textContent = 'Institutes';
+    document.getElementById('instituteNameDisplay').textContent = currentInstitute;
+  }
   await loadBranchFromDB(currentBranch);
-  document.getElementById('branchBtnLabel').textContent = currentBranch;
-  document.getElementById('branchDot').style.background = BRANCH_COLORS[BRANCH_NAMES.indexOf(currentBranch) % BRANCH_COLORS.length];
+  // Set branch color from loaded data
+  const { data: branchRow } = await SB.from('branches').select('color').eq('name', currentBranch).eq('institute_name', currentInstitute).single();
+  if (branchRow?.color) document.getElementById('branchDot').style.background = branchRow.color;
   renderSidebar();
   render();
 });
 
-// ============================================================
-// SUPABASE DATA FUNCTIONS
-// ============================================================
-async function seedAllBranchesToDB() {
-  // Get all already-seeded branch names
-  const { data: existingDepts } = await SB.from('departments').select('branch_name,name');
-  const seededMap = {};
-  (existingDepts || []).forEach(d => {
-    if (!seededMap[d.branch_name]) seededMap[d.branch_name] = new Set();
-    seededMap[d.branch_name].add(d.name);
-  });
-
-  const allDepts = [];
-  const allFields = [];
-
-  for (const branch of BRANCH_NAMES) {
-    const bd = branchData[branch];
-    if (!bd || !bd.DEPTS.length) continue;
-    const already = seededMap[branch] || new Set();
-    bd.DEPTS.forEach(d => {
-      if (already.has(d)) return; // skip already saved dept
-      allDepts.push({ branch_name: branch, name: d, color: bd.DEPT_COLORS[d] });
-      (bd.ROWS[d] || []).forEach(([cat, sub], i) => {
-        allFields.push({ branch_name: branch, dept_name: d, category: cat, subcategory: sub, sort_order: i });
-      });
-    });
-  }
-
-  if (!allDepts.length) return; // nothing to seed
-
-  for (let i = 0; i < allDepts.length; i += 500)
-    await SB.from('departments').insert(allDepts.slice(i, i + 500));
-  for (let i = 0; i < allFields.length; i += 500)
-    await SB.from('fields').insert(allFields.slice(i, i + 500));
-
-  showToast('Branches seeded to Supabase');
-}
-
 async function loadBranchFromDB(branch) {
   if (!window.SB) return;
-  const bd = branchData[branch];
-
-  // Always reset before loading fresh from Supabase
-  bd.DEPTS.length = 0;
-  Object.keys(bd.DEPT_COLORS).forEach(k => delete bd.DEPT_COLORS[k]);
-  Object.keys(bd.ROWS).forEach(k => delete bd.ROWS[k]);
 
   // Load departments
-  const { data: depts } = await SB.from('departments').select('name,color').eq('branch_name', branch);
+  let deptQ = SB.from('departments').select('name,color').eq('branch_name', branch).eq('institute_name', currentInstitute);
+  const { data: depts } = await deptQ;
   if (depts && depts.length) {
-    bd.DEPTS.length = 0;
-    depts.forEach(d => {
-      bd.DEPTS.push(d.name);
-      bd.DEPT_COLORS[d.name] = d.color;
-    });
-  } else if (bd.DEPTS.length) {
-    // Seed default departments and fields into Supabase
-    for (const d of bd.DEPTS) {
-      await SB.from('departments').upsert(
-        { branch_name: branch, name: d, color: bd.DEPT_COLORS[d] },
-        { onConflict: 'branch_name,name' }
-      );
-      const fieldRows = (bd.ROWS[d] || []).map(([cat, sub], i) => ({
-        branch_name: branch, dept_name: d, category: cat, subcategory: sub, sort_order: i
-      }));
-      if (fieldRows.length) {
-        await SB.from('fields').insert(fieldRows).catch(() => {});
-      }
-    }
+    DEPTS.length = 0;
+    Object.keys(DEPT_COLORS).forEach(k => delete DEPT_COLORS[k]);
+    depts.forEach(d => { DEPTS.push(d.name); DEPT_COLORS[d.name] = d.color; });
   }
+  // else: keep hardcoded defaults
 
   // Load fields
-  const { data: fields } = await SB.from('fields').select('dept_name,category,subcategory').eq('branch_name', branch).order('sort_order').order('id');
-  if (fields) {
-    bd.DEPTS.forEach(d => { bd.ROWS[d] = []; });
+  let fieldQ = SB.from('fields').select('dept_name,category,subcategory').eq('branch_name', branch).eq('institute_name', currentInstitute).order('sort_order').order('id');
+  const { data: fields } = await fieldQ;
+  if (fields && fields.length) {
+    DEPTS.forEach(d => { ROWS[d] = []; });
     fields.forEach(f => {
-      if (!bd.ROWS[f.dept_name]) bd.ROWS[f.dept_name] = [];
-      bd.ROWS[f.dept_name].push([f.category, f.subcategory]);
+      if (!ROWS[f.dept_name]) ROWS[f.dept_name] = [];
+      ROWS[f.dept_name].push([f.category, f.subcategory]);
     });
   }
+  // else: keep hardcoded ROWS
 
-  // Load budget
-  const { data: budgets } = await SB.from('budget_data').select('dept_name,field_key,period,value').eq('branch_name', branch);
-  bd.store.budget = {};
-  bd.DEPTS.forEach(d => { bd.store.budget[d] = {}; });
+  // Reset store then load budget
+  store.budget = {}; store.actual = {};
+  DEPTS.forEach(d => { store.budget[d] = {}; store.actual[d] = {}; });
+
+  let budgetQ = SB.from('budget_data').select('dept_name,field_key,period,value').eq('branch_name', branch).eq('institute_name', currentInstitute);
+  const { data: budgets } = await budgetQ;
   (budgets||[]).forEach(r => {
-    if (!bd.store.budget[r.dept_name]) bd.store.budget[r.dept_name] = {};
-    if (!bd.store.budget[r.dept_name][r.field_key]) bd.store.budget[r.dept_name][r.field_key] = {monthly:0,w1:0,w2:0,w3:0,w4:0};
-    bd.store.budget[r.dept_name][r.field_key][r.period] = Number(r.value);
+    if (!store.budget[r.dept_name]) store.budget[r.dept_name] = {};
+    if (!store.budget[r.dept_name][r.field_key]) store.budget[r.dept_name][r.field_key] = {monthly:0,w1:0,w2:0,w3:0,w4:0};
+    store.budget[r.dept_name][r.field_key][r.period] = Number(r.value);
   });
 
   // Load actuals
-  const { data: actuals } = await SB.from('actual_data').select('dept_name,field_key,period,value').eq('branch_name', branch);
-  bd.store.actual = {};
-  bd.DEPTS.forEach(d => { bd.store.actual[d] = {}; });
+  let actualQ = SB.from('actual_data').select('dept_name,field_key,period,value').eq('branch_name', branch).eq('institute_name', currentInstitute);
+  const { data: actuals } = await actualQ;
   (actuals||[]).forEach(r => {
-    if (!bd.store.actual[r.dept_name]) bd.store.actual[r.dept_name] = {};
-    if (!bd.store.actual[r.dept_name][r.field_key]) bd.store.actual[r.dept_name][r.field_key] = {monthly:0,w1:0,w2:0,w3:0,w4:0};
-    bd.store.actual[r.dept_name][r.field_key][r.period] = Number(r.value);
+    if (!store.actual[r.dept_name]) store.actual[r.dept_name] = {};
+    if (!store.actual[r.dept_name][r.field_key]) store.actual[r.dept_name][r.field_key] = {monthly:0,w1:0,w2:0,w3:0,w4:0};
+    store.actual[r.dept_name][r.field_key][r.period] = Number(r.value);
   });
 
   // Load collection
-  const { data: coll } = await SB.from('collection_data').select('period,source,target,actual').eq('branch_name', branch);
+  let collQ = SB.from('collection_data').select('period,source,target,actual').eq('branch_name', branch).eq('institute_name', currentInstitute);
+  const { data: coll } = await collQ;
   (coll||[]).forEach(r => {
-    if (bd.store.collection[r.period] && bd.store.collection[r.period][r.source]) {
-      bd.store.collection[r.period][r.source].target = Number(r.target);
-      bd.store.collection[r.period][r.source].actual = Number(r.actual);
+    if (store.collection[r.period]?.[r.source]) {
+      store.collection[r.period][r.source].target = Number(r.target);
+      store.collection[r.period][r.source].actual = Number(r.actual);
     }
   });
-
-  getBranchProxy();
 }
 
 async function saveValToDB(type, dept, key, period, val) {
-  if (!window.SB) { console.error('SB not ready'); return; }
-  if (!currentBranch) { console.error('No branch selected'); return; }
+  if (!window.SB || !currentBranch) return;
   const table = type === 'budget' ? 'budget_data' : 'actual_data';
-  const payload = { branch_name: currentBranch, dept_name: dept, field_key: key, period, value: val, updated_at: new Date().toISOString() };
-  const { data, error } = await SB.from(table).upsert(payload, { onConflict: 'branch_name,dept_name,field_key,period' }).select();
-  if (error) console.error('saveValToDB error:', error.message, payload);
+  const payload = { institute_name: currentInstitute, branch_name: currentBranch, dept_name: dept, field_key: key, period, value: val, updated_at: new Date().toISOString() };
+  const { error } = await SB.from(table).upsert(payload, { onConflict: 'institute_name,branch_name,dept_name,field_key,period' });
+  if (error) console.error('saveValToDB error:', error.message);
 }
 
 async function saveCollectionToDB(period, source, target, actual) {
   if (!window.SB) return;
-  await SB.from('collection_data').upsert(
-    { branch_name: currentBranch, period, source, target, actual, updated_at: new Date().toISOString() },
-    { onConflict: 'branch_name,period,source' }
-  );
+  const payload = { institute_name: currentInstitute, branch_name: currentBranch, period, source, target, actual, updated_at: new Date().toISOString() };
+  await SB.from('collection_data').upsert(payload, { onConflict: 'institute_name,branch_name,period,source' });
 }
 
 async function saveDeptToDB(dept, color) {
   if (!window.SB) return;
-  await SB.from('departments').upsert(
-    { branch_name: currentBranch, name: dept, color },
-    { onConflict: 'branch_name,name' }
-  );
+  const payload = { institute_name: currentInstitute, branch_name: currentBranch, name: dept, color };
+  await SB.from('departments').upsert(payload, { onConflict: 'institute_name,branch_name,name' });
 }
 
 async function saveFieldToDB(dept, cat, sub) {
   if (!window.SB) return;
-  await SB.from('fields').insert({ branch_name: currentBranch, dept_name: dept, category: cat, subcategory: sub });
+  const payload = { institute_name: currentInstitute, branch_name: currentBranch, dept_name: dept, category: cat, subcategory: sub };
+  await SB.from('fields').insert(payload);
 }
 
 // ============================================================
@@ -966,8 +860,8 @@ function renderDept(dept){
     return `<tr>
       <td><span style="color:${color};font-weight:600;font-size:12px">${cat}</span></td>
       <td>${sub}</td>
-      <td>${activeCat ? `<span class="mono">${fmt(b)}</span>` : `<input type="number" min="0" value="${b||''}" placeholder="0" onchange="setBudget('${dept}','${k}','${viewMode}',+this.value);render()" />`}</td>
-      <td>${activeCat ? `<span class="mono">${fmt(a)}</span>` : `<input type="number" min="0" value="${a||''}" placeholder="0" onchange="setActual('${dept}','${k}','${viewMode}',+this.value);render()" />`}</td>
+      <td>${activeCat ? `<span class="mono">${fmt(b)}</span>` : `<input type="number" min="0" value="${b||''}" placeholder="0" onchange="setBudget('${safeD}','${k}','${viewMode}',+this.value);render()" />`}</td>
+      <td>${activeCat ? `<span class="mono">${fmt(a)}</span>` : `<input type="number" min="0" value="${a||''}" placeholder="0" onchange="setActual('${safeD}','${k}','${viewMode}',+this.value);render()" />`}</td>
       <td>${fmtVar(v)}</td>
       <td>
         <div style="font-size:12px;color:var(--muted)">${b?p+'%':'—'}</div>
@@ -1649,155 +1543,13 @@ function deleteDept(name){
   showToast('Department deleted');
 }
 
-// ============================================================
-// BRANCHES
-// ============================================================
-const BRANCH_NAMES = ['Manjeri','Tirur','Kozhicode','Kannur','Kasaragod','Palakkad','Thrissur','Kollam','Attingal','Marthadam','Allappuzha','Kuttiyadi','Bangalore','Hyderabad'];
-const BRANCH_COLORS = ['#4361ee','#f77f00','#7b2d8b','#2ec4b6','#e63946','#06d6a0','#118ab2','#ef476f','#f4a261','#073b4c','#4361ee','#f77f00','#7b2d8b','#2ec4b6'];
-
-// Each branch gets its own isolated data store
-const branchData = {};
-BRANCH_NAMES.forEach((b,i)=>{
-  branchData[b] = {
-    DEPTS: ['ADMINISTRATIVE','OPERATIONS','R&D','MARKETING','BRANDING'],
-    DEPT_COLORS: { ADMINISTRATIVE:'#4361ee', OPERATIONS:'#f77f00', 'R&D':'#7b2d8b', MARKETING:'#2ec4b6', BRANDING:'#e63946' },
-    ROWS: {
-      ADMINISTRATIVE:[['Salary','Faculty'],['Salary','SCM'],['Salary','Office Staff'],['Salary','Receptionist'],['Recruitment','Hiring Cost'],['Travel & Allowance','Food'],['Travel & Allowance','Travel'],['Office','Office Rent'],['Hostel','Hostel Rent'],['Office','Electricity'],['Hostel','Hostel Electricity'],['Office','MobileRecharges'],['Office','Internet'],['Office','Refreshment'],['Office','Stationery'],['Office','Software Subscriptions'],['Office','Maintenance & Repairs'],['Hostel','Maintenance & Repairs'],['Office','Cleaning'],['Hostel','Cleaning'],['Office','Water Supply'],['Hostel','Water Supply'],['Hostel','Food & Mess'],['Hostel','Warden Salary'],['Hostel','Security'],['Hostel','Housekeeping'],['Infrastructure','Classroom Setup'],['Student Kit','SMT'],['Student Kit','CMT'],['Student Kit','Trouble shooting']],
-      OPERATIONS:[['Student Kit','Tool&Spare'],['Logistics','Courier – Tool Kit'],['Research','Tools & Software'],['Training','Workshops'],['Recruitment','Hiring Cost'],['Travel & Allowance','Food'],['Travel & Allowance','Travel']],
-      'R&D':[['Salary','R&D staff'],['Advertising','Digital Ads'],['Campaigns','Lead Generation'],['Events','Seminars/Webinars'],['Recruitment','Hiring Cost'],['Travel & Allowance','Food'],['Travel & Allowance','Travel']],
-      MARKETING:[['Salary','offline Marketing staff'],['Salary','online Marketing staff'],['Design','Creatives'],['Media','Video Production'],['Promotion','Brand Promotion'],['Recruitment','Hiring Cost'],['Travel & Allowance','Food'],['Travel & Allowance','Travel']],
-      BRANDING:[['Salary','Offline branding staff'],['Salary','Online branding staff'],['Recruitment','Hiring Cost'],['Travel & Allowance','Food'],['Travel & Allowance','Travel']]
-    },
-    store: {
-      budget:{}, actual:{},
-      collection:{ monthly:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}}, w1:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}}, w2:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}}, w3:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}}, w4:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}} },
-      headSalary:{monthly:0,w1:0,w2:0,w3:0,w4:0},
-      directorWithdrawal:{monthly:0,w1:0,w2:0,w3:0,w4:0},
-      cashBalance:{monthly:0,w1:0,w2:0,w3:0,w4:0}
-    },
-    deptCatFilter:{},
-    deptSort:{},
-    currentDept:'DASHBOARD'
-  };
-  // init store rows
-  const bd = branchData[b];
-  bd.DEPTS.forEach(d=>{
-    bd.store.budget[d]={}; bd.store.actual[d]={};
-    (bd.ROWS[d]||[]).forEach(([cat,sub])=>{
-      const k=cat+'__'+sub;
-      bd.store.budget[d][k]={monthly:0,w1:0,w2:0,w3:0,w4:0};
-      bd.store.actual[d][k]={monthly:0,w1:0,w2:0,w3:0,w4:0};
-    });
-  });
-});
-
-let currentBranch = BRANCH_NAMES[0];
-
-// Apply early-captured URL branch param now that branchData is ready
-(function(){
-  const _b = _earlyBranch;
-  if (!_b) return;
-  if (BRANCH_NAMES.includes(_b)) {
-    currentBranch = _b;
-  } else {
-    BRANCH_NAMES.push(_b);
-    BRANCH_COLORS.push(PALETTE[BRANCH_NAMES.length % PALETTE.length]);
-    branchData[_b] = {
-      DEPTS: [], DEPT_COLORS: {}, ROWS: {},
-      store: { budget:{}, actual:{}, collection:{monthly:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}},w1:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}},w2:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}},w3:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}},w4:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}}}, headSalary:{monthly:0,w1:0,w2:0,w3:0,w4:0}, directorWithdrawal:{monthly:0,w1:0,w2:0,w3:0,w4:0}, cashBalance:{monthly:0,w1:0,w2:0,w3:0,w4:0} },
-      deptCatFilter:{}, deptSort:{}, currentDept:'DASHBOARD'
-    };
-    currentBranch = _b;
-  }
-  document.getElementById('branchBtnLabel').textContent = currentBranch;
-  document.getElementById('branchDot').style.background = BRANCH_COLORS[BRANCH_NAMES.indexOf(currentBranch) % BRANCH_COLORS.length];
-})();
-
-function B(){ return branchData[currentBranch]; }
-
-function switchBranch(name){
-  B().currentDept = currentDept;
-  currentBranch = name;
-  currentDept = 'DASHBOARD';
-  getBranchProxy();
-  document.getElementById('branchBtnLabel').textContent = name;
-  document.getElementById('branchDot').style.background = BRANCH_COLORS[BRANCH_NAMES.indexOf(name)%BRANCH_COLORS.length];
-  closeBranchDropdown();
-  if (window.SB) {
-    loadBranchFromDB(name).then(()=>{ renderSidebar(); render(); });
-  } else {
-    renderSidebar(); render();
-  }
-}
-
-function toggleBranchDropdown(){
-  const dd = document.getElementById('branchDropdown');
-  if(dd.classList.contains('open')){ closeBranchDropdown(); return; }
-  renderBranchDropdown();
-  dd.classList.add('open');
-}
-
-function closeBranchDropdown(){
-  document.getElementById('branchDropdown').classList.remove('open');
-}
-
-function renderBranchDropdown(){
-  const dd = document.getElementById('branchDropdown');
-  dd.innerHTML = BRANCH_NAMES.map((name,i)=>{
-    const color = BRANCH_COLORS[i%BRANCH_COLORS.length];
-    const active = name===currentBranch;
-    const link = `${location.origin}${location.pathname.replace('index.html','').replace('admin.html','')}branch.html?branch=${encodeURIComponent(name)}`;
-    return `<div class="branch-option${active?' active':''}" style="justify-content:space-between">
-      <div onclick="switchBranch('${name}')" style="display:flex;align-items:center;gap:10px;flex:1;cursor:pointer">
-        <span style="width:8px;height:8px;border-radius:50%;background:${color};display:inline-block;flex-shrink:0"></span>
-        ${name}
-      </div>
-      <span onclick="navigator.clipboard.writeText('${link}').then(()=>showToast('Link copied'))" title="Copy branch link" style="cursor:pointer;font-size:11px;color:var(--admin);padding:2px 7px;border-radius:4px;background:var(--admin-light);margin-left:8px;flex-shrink:0">🔗</span>
-    </div>`;
-  }).join('') +
-  `<div class="branch-add-row" onclick="openAddBranchModal()">＋ Add Branch</div>`;
-}
-
-function openAddBranchModal(){
-  closeBranchDropdown();
-  document.getElementById('newBranchName').value='';
-  document.getElementById('addBranchModal').style.display='flex';
-  setTimeout(()=>document.getElementById('newBranchName').focus(),50);
-}
-function closeAddBranchModal(){ document.getElementById('addBranchModal').style.display='none'; }
-
-function saveNewBranch(){
-  const name = document.getElementById('newBranchName').value.trim();
-  if(!name){ alert('Enter a branch name.'); return; }
-  if(BRANCH_NAMES.includes(name)){ alert('Branch already exists.'); return; }
-  BRANCH_NAMES.push(name);
-  BRANCH_COLORS.push(PALETTE[BRANCH_NAMES.length%PALETTE.length]);
-  branchData[name]={
-    DEPTS:['ADMINISTRATIVE','OPERATIONS','R&D','MARKETING','BRANDING'],
-    DEPT_COLORS:{ADMINISTRATIVE:'#4361ee',OPERATIONS:'#f77f00','R&D':'#7b2d8b',MARKETING:'#2ec4b6',BRANDING:'#e63946'},
-    ROWS:{
-      ADMINISTRATIVE:[['Salary','Faculty'],['Salary','SCM'],['Salary','Office Staff'],['Salary','Receptionist'],['Recruitment','Hiring Cost'],['Travel & Allowance','Food'],['Travel & Allowance','Travel'],['Office','Office Rent'],['Hostel','Hostel Rent'],['Office','Electricity'],['Hostel','Hostel Electricity'],['Office','MobileRecharges'],['Office','Internet'],['Office','Refreshment'],['Office','Stationery'],['Office','Software Subscriptions'],['Office','Maintenance & Repairs'],['Hostel','Maintenance & Repairs'],['Office','Cleaning'],['Hostel','Cleaning'],['Office','Water Supply'],['Hostel','Water Supply'],['Hostel','Food & Mess'],['Hostel','Warden Salary'],['Hostel','Security'],['Hostel','Housekeeping'],['Infrastructure','Classroom Setup'],['Student Kit','SMT'],['Student Kit','CMT'],['Student Kit','Trouble shooting']],
-      OPERATIONS:[['Student Kit','Tool&Spare'],['Logistics','Courier – Tool Kit'],['Research','Tools & Software'],['Training','Workshops'],['Recruitment','Hiring Cost'],['Travel & Allowance','Food'],['Travel & Allowance','Travel']],
-      'R&D':[['Salary','R&D staff'],['Advertising','Digital Ads'],['Campaigns','Lead Generation'],['Events','Seminars/Webinars'],['Recruitment','Hiring Cost'],['Travel & Allowance','Food'],['Travel & Allowance','Travel']],
-      MARKETING:[['Salary','offline Marketing staff'],['Salary','online Marketing staff'],['Design','Creatives'],['Media','Video Production'],['Promotion','Brand Promotion'],['Recruitment','Hiring Cost'],['Travel & Allowance','Food'],['Travel & Allowance','Travel']],
-      BRANDING:[['Salary','Offline branding staff'],['Salary','Online branding staff'],['Recruitment','Hiring Cost'],['Travel & Allowance','Food'],['Travel & Allowance','Travel']]
-    },
-    store:{
-      budget:{},actual:{},
-      collection:{monthly:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}},w1:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}},w2:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}},w3:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}},w4:{SMT:{target:0,actual:0},CMT:{target:0,actual:0}}},
-      headSalary:{monthly:0,w1:0,w2:0,w3:0,w4:0},directorWithdrawal:{monthly:0,w1:0,w2:0,w3:0,w4:0},cashBalance:{monthly:0,w1:0,w2:0,w3:0,w4:0}
-    },
-    deptCatFilter:{},deptSort:{},currentDept:'DASHBOARD'
-  };
-  const bd=branchData[name];
-  bd.DEPTS.forEach(d=>{
-    bd.store.budget[d]={}; bd.store.actual[d]={};
-    (bd.ROWS[d]||[]).forEach(([cat,sub])=>{ const k=cat+'__'+sub; bd.store.budget[d][k]={monthly:0,w1:0,w2:0,w3:0,w4:0}; bd.store.actual[d][k]={monthly:0,w1:0,w2:0,w3:0,w4:0}; });
-  });
-  closeAddBranchModal();
-  switchBranch(name);
-  showToast('Branch added');
-}
+// Expose globals so all render functions work
+window.DEPTS = DEPTS;
+window.DEPT_COLORS = DEPT_COLORS;
+window.ROWS = ROWS;
+window.store = store;
+window.deptCatFilter = deptCatFilter;
+window.deptSort = deptSort;
 
 // ============================================================
 // EXCEL DOWNLOAD (ExcelJS with full colour support)
@@ -1940,7 +1692,8 @@ async function uploadExcel(input) {
         upserts_monthly.push({
           branch_name: currentBranch, dept_name: mDept,
           field_key: mCat + '__' + mSub, period: 'monthly',
-          value: mAct, updated_at: new Date().toISOString()
+          value: mAct, updated_at: new Date().toISOString(),
+          ...(currentInstitute ? {institute_name: currentInstitute} : {})
         });
       }
 
@@ -1950,7 +1703,7 @@ async function uploadExcel(input) {
       const wSub  = String(row[8]||'').trim();
       if (wDept) lastWeeklyDept = wDept;
       if (wCat && wSub) {
-        const base = { branch_name: currentBranch, dept_name: wDept, field_key: wCat+'__'+wSub, updated_at: new Date().toISOString() };
+        const base = { branch_name: currentBranch, dept_name: wDept, field_key: wCat+'__'+wSub, updated_at: new Date().toISOString(), ...(currentInstitute ? {institute_name: currentInstitute} : {}) };
         // cols: w1 budget=9, w1 actual=10, w2 budget=11, w2 actual=12, w3 budget=13, w3 actual=14, w4 budget=15, w4 actual=16
         upserts_w1.push({...base, period:'w1', value: Number(row[10])||0});
         upserts_w2.push({...base, period:'w2', value: Number(row[12])||0});
@@ -1962,7 +1715,8 @@ async function uploadExcel(input) {
     // Upsert all to Supabase in chunks
     const all = [...upserts_monthly, ...upserts_w1, ...upserts_w2, ...upserts_w3, ...upserts_w4];
     for (let i = 0; i < all.length; i += 500) {
-      const { error } = await SB.from('actual_data').upsert(all.slice(i, i+500), { onConflict: 'branch_name,dept_name,field_key,period' });
+      const conflict = currentInstitute ? 'institute_name,branch_name,dept_name,field_key,period' : 'branch_name,dept_name,field_key,period';
+      const { error } = await SB.from('actual_data').upsert(all.slice(i, i+500), { onConflict: conflict });
       if (error) { alert('Upload error: ' + error.message); input.value=''; return; }
     }
 
@@ -1975,60 +1729,26 @@ async function uploadExcel(input) {
   reader.readAsArrayBuffer(file);
 }
 
-// close dropdown when clicking outside
-document.addEventListener('click', e=>{
-  if(!document.getElementById('branchWrap').contains(e.target)) closeBranchDropdown();
-});
-
 // ============================================================
 // INIT
 // ============================================================
-// Proxy all data access through current branch
-function getBranchProxy(){
-  const bd = B();
-  window.DEPTS = bd.DEPTS;
-  window.DEPT_COLORS = bd.DEPT_COLORS;
-  window.ROWS = bd.ROWS;
-  window.store = bd.store;
-  window.deptCatFilter = bd.deptCatFilter;
-  window.deptSort = bd.deptSort;
-}
-
-// Patch render and selectDept to use branch data
-const _origRender = render;
-window.render = function(){
-  getBranchProxy();
-  _origRender();
-};
-const _origSelectDept = selectDept;
 window.selectDept = async function(d){
   currentDept = d;
-  B().currentDept = d;
   document.querySelectorAll('.dept-btn').forEach(b=>b.classList.toggle('active', b.dataset.dept===d));
   if (d !== 'DASHBOARD' && d !== 'COLLECTION' && window.SB) {
-    // Reload actuals fresh from Supabase
-    const { data: actuals } = await SB.from('actual_data').select('dept_name,field_key,period,value')
-      .eq('branch_name', currentBranch).eq('dept_name', d);
-    const bd = B();
-    if (!bd.store.actual[d]) bd.store.actual[d] = {};
+    let aq = SB.from('actual_data').select('dept_name,field_key,period,value').eq('branch_name', currentBranch).eq('dept_name', d);
+    if (currentInstitute) aq = aq.eq('institute_name', currentInstitute);
+    const { data: actuals } = await aq;
+    if (!store.actual[d]) store.actual[d] = {};
     (actuals||[]).forEach(r => {
-      if (!bd.store.actual[r.dept_name]) bd.store.actual[r.dept_name] = {};
-      if (!bd.store.actual[r.dept_name][r.field_key]) bd.store.actual[r.dept_name][r.field_key] = {monthly:0,w1:0,w2:0,w3:0,w4:0};
-      bd.store.actual[r.dept_name][r.field_key][r.period] = Number(r.value);
+      if (!store.actual[r.dept_name]) store.actual[r.dept_name] = {};
+      if (!store.actual[r.dept_name][r.field_key]) store.actual[r.dept_name][r.field_key] = {monthly:0,w1:0,w2:0,w3:0,w4:0};
+      store.actual[r.dept_name][r.field_key][r.period] = Number(r.value);
     });
-    getBranchProxy();
   }
   render();
 };
-const _origRenderSidebar = renderSidebar;
-window.renderSidebar = function(){
-  getBranchProxy();
-  _origRenderSidebar();
-};
 
-getBranchProxy();
-// renderSidebar and render are called by sb-ready event
-// Fallback if Supabase not loaded (local use)
 if (!document.querySelector('script[type="module"]')) {
   renderSidebar();
   render();
