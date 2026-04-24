@@ -45,6 +45,11 @@
   .inst-total{display:flex;flex-direction:column;align-items:flex-end;}
   .inst-total-val{font-size:12px;font-weight:700;font-family:'DM Mono',monospace;}
   .inst-total-label{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;}
+
+  .inst-kpi-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;padding:20px 22px 4px;}
+  .inst-kpi-card{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:16px 20px;}
+  .inst-kpi-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px;}
+  .inst-kpi-val{font-size:24px;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:-1px;}
   .institute-actions{display:flex;gap:8px;margin-left:8px;}
   .add-branch-btn{
     padding:5px 13px;border-radius:7px;border:1.5px dashed var(--border);
@@ -351,16 +356,16 @@ async function loadOverview() {
         <div class="institute-dot" style="background:${inst.color}"></div>
         <div class="institute-name">${inst.name}</div>
         <div class="institute-meta">${instBranches.length} branch${instBranches.length!==1?'es':''}</div>
-        <div class="institute-totals" data-inst="${inst.name.replace(/"/g,'&quot;')}">
-          <div class="inst-total"><div class="inst-total-val inst-budget" style="color:var(--admin)">—</div><div class="inst-total-label">Budget</div></div>
-          <div class="inst-total"><div class="inst-total-val inst-actual" style="color:var(--text)">—</div><div class="inst-total-label">Actual</div></div>
-          <div class="inst-total"><div class="inst-total-val inst-variance" style="color:var(--muted)">—</div><div class="inst-total-label">Variance</div></div>
-        </div>
         <div class="institute-actions" onclick="event.stopPropagation()">
           <button class="add-branch-btn" onclick="openAddBranchModal('${inst.name.replace(/'/g,"\\'")}')">＋ Add Branch</button>
         </div>
       </div>
       <div class="institute-body ${isOpen?'open':''}">
+        <div class="inst-kpi-row">
+          <div class="inst-kpi-card"><div class="inst-kpi-label">Total Budget</div><div class="inst-kpi-val inst-budget" style="color:var(--admin)">—</div></div>
+          <div class="inst-kpi-card"><div class="inst-kpi-label">Total Actual</div><div class="inst-kpi-val inst-actual" style="color:var(--text)">—</div></div>
+          <div class="inst-kpi-card"><div class="inst-kpi-label">Variance</div><div class="inst-kpi-val inst-variance" style="color:var(--muted)">—</div></div>
+        </div>
         <div class="branches-grid">${branchCards}</div>
       </div>`;
     list.appendChild(block);
@@ -396,15 +401,18 @@ window.toggleInstitute = async (name) => {
           if (vals[2]) { vals[2].textContent = budget||actual ? varPrefix+fmtShort(variance) : '—'; vals[2].style.color = varColor; }
           instBudget += budget; instActual += actual;
         });
-        // Update institute-level totals in header
-        const totalsEl = block.querySelector('.institute-totals');
-        if (totalsEl) {
+        // Update institute-level totals in body KPI cards
+        const instBudgetEl = block.querySelector('.inst-kpi-row .inst-budget');
+        const instActualEl = block.querySelector('.inst-kpi-row .inst-actual');
+        const instVarianceEl = block.querySelector('.inst-kpi-row .inst-variance');
+        if (instBudgetEl) {
           const instVar = instBudget - instActual;
           const instVarColor = instVar < 0 ? 'var(--red)' : instVar > 0 ? 'var(--green)' : 'var(--muted)';
-          totalsEl.querySelector('.inst-budget').textContent = fmtShort(instBudget);
-          totalsEl.querySelector('.inst-actual').textContent = fmtShort(instActual);
-          totalsEl.querySelector('.inst-variance').textContent = instBudget||instActual ? (instVar>0?'+':'')+fmtShort(instVar) : '—';
-          totalsEl.querySelector('.inst-variance').style.color = instVarColor;
+          instBudgetEl.textContent = fmtShort(instBudget);
+          instActualEl.textContent = fmtShort(instActual);
+          instVarianceEl.textContent = instBudget||instActual ? (instVar>0?'+':'')+fmtShort(instVar) : '—';
+          instVarianceEl.style.color = instVarColor;
+          instActualEl.style.color = instActual > instBudget ? 'var(--red)' : 'var(--text)';
         }
       }
     }
