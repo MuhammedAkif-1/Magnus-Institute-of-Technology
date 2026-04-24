@@ -128,7 +128,6 @@
     .grand-kpi-label{font-size:10px;}
     .institute-header{padding:12px 14px;gap:8px;flex-wrap:wrap;}
     .institute-name{font-size:13px;min-width:0;}
-    .institute-meta{display:none;}
     .inst-header-totals{gap:12px;margin-left:0;width:100%;justify-content:space-between;order:3;padding-top:8px;border-top:1px solid var(--border);}
     .inst-ht-val{font-size:12px;}
     .institute-actions{order:2;margin-left:auto;gap:6px;}
@@ -430,8 +429,10 @@ async function loadOverview() {
       <div class="institute-header" onclick="toggleInstitute('${inst.name.replace(/'/g,"\\'")}')">
         <span class="institute-arrow ${isOpen?'open':''}">▶</span>
         <div class="institute-dot" style="background:${inst.color}"></div>
-        <div class="institute-name">${inst.name}</div>
-        <div class="institute-meta">${instBranches.length} branch${instBranches.length!==1?'es':''}</div>
+        <div style="flex:1;min-width:0">
+          <div class="institute-name">${inst.name}</div>
+          <div class="institute-meta">${instBranches.length} branch${instBranches.length!==1?'es':''}</div>
+        </div>
         <div class="inst-header-totals">
           <div class="inst-ht"><div class="inst-ht-val" style="color:var(--admin)">${fmtShort(instBudget)}</div><div class="inst-ht-label">Budget</div></div>
           <div class="inst-ht"><div class="inst-ht-val" style="color:${instActual>instBudget?'var(--red)':'var(--text)'}">${fmtShort(instActual)}</div><div class="inst-ht-label">Actual</div></div>
