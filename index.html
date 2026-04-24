@@ -240,8 +240,21 @@ window.saveInstitute = async () => {
   if (!name) { alert('Enter an institute name.'); return; }
   const { error } = await supabase.from('institutes').insert({ name, color: instSelectedColor });
   if (error) { alert('Error: ' + error.message); return; }
-  closeInstituteModal();
+  window.closeInstituteModal();
   showToast('Institute added');
+  await loadOverview();
+};
+
+window.closeModal = () => document.getElementById('addBranchModal').style.display = 'none';
+
+window.saveBranch = async () => {
+  const name = document.getElementById('branchNameInput').value.trim();
+  if (!name) { alert('Enter a branch name.'); return; }
+  const { error } = await supabase.from('branches').insert({ institute_name: _addingToInstitute, name, color: selectedColor });
+  if (error) { alert('Error: ' + error.message); return; }
+  window.closeModal();
+  showToast('Branch added');
+  openInstitute = _addingToInstitute;
   await loadOverview();
 };
 
