@@ -305,23 +305,44 @@ async function loadOverview() {
           </div>
           <button class="branch-delete" onclick="deleteBranch('${b.name}')" title="Delete branch">✕</button>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;padding:12px 20px;gap:10px;border-bottom:1px solid var(--border)">
-          <div class="stat"><div class="stat-val" style="font-size:13px;color:${color}">${fmt(budget)}</div><div class="stat-label">Budget</div></div>
-          <div class="stat"><div class="stat-val" style="font-size:13px;color:#2dc653">${fmt(actual)}</div><div class="stat-label">Actual</div></div>
-          <div class="stat"><div class="stat-val" style="font-size:13px;color:${varColor}">${variance>=0?'+':''}${fmt(variance)}</div><div class="stat-label">Variance</div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid var(--border)">
+          <div style="padding:14px 16px;border-right:1px solid var(--border)">
+            <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">Budget</div>
+            <div style="font-size:18px;font-weight:800;font-family:'DM Mono',monospace;color:${color};letter-spacing:-0.5px">${fmt(budget)}</div>
+          </div>
+          <div style="padding:14px 16px;border-right:1px solid var(--border)">
+            <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">Actual</div>
+            <div style="font-size:18px;font-weight:800;font-family:'DM Mono',monospace;color:#2dc653;letter-spacing:-0.5px">${fmt(actual)}</div>
+          </div>
+          <div style="padding:14px 16px">
+            <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">Variance</div>
+            <div style="font-size:18px;font-weight:800;font-family:'DM Mono',monospace;color:${varColor};letter-spacing:-0.5px">${variance>=0?'+':''}${fmt(variance)}</div>
+          </div>
         </div>
-        <div style="padding:10px 20px;border-bottom:1px solid var(--border)">
-          <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">Collection</div>
+        <div style="padding:12px 16px;border-bottom:1px solid var(--border)">
+          <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px">Collection</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-            <div style="background:#eef1fd;border-radius:8px;padding:8px 10px">
-              <div style="font-size:10px;font-weight:700;color:#4361ee;margin-bottom:4px">SMT</div>
-              <div style="font-size:11px;color:var(--muted)">Target: <span style="font-weight:700;color:var(--text)">${fmt(coll.smtTarget)}</span></div>
-              <div style="font-size:11px;color:var(--muted)">Actual: <span style="font-weight:700;color:${coll.smtActual>coll.smtTarget?'#e63946':'#2dc653'}">${fmt(coll.smtActual)}</span></div>
+            <div style="background:#eef1fd;border-radius:10px;padding:10px 12px">
+              <div style="font-size:11px;font-weight:700;color:#4361ee;margin-bottom:6px">SMT</div>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="font-size:10px;color:var(--muted)">Target</span>
+                <span style="font-size:13px;font-weight:700;font-family:'DM Mono',monospace;color:#1a1d2e">${fmt(coll.smtTarget)}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:3px">
+                <span style="font-size:10px;color:var(--muted)">Actual</span>
+                <span style="font-size:13px;font-weight:700;font-family:'DM Mono',monospace;color:${coll.smtActual>coll.smtTarget?'#e63946':'#2dc653'}">${fmt(coll.smtActual)}</span>
+              </div>
             </div>
-            <div style="background:#fff4e8;border-radius:8px;padding:8px 10px">
-              <div style="font-size:10px;font-weight:700;color:#f77f00;margin-bottom:4px">CMT</div>
-              <div style="font-size:11px;color:var(--muted)">Target: <span style="font-weight:700;color:var(--text)">${fmt(coll.cmtTarget)}</span></div>
-              <div style="font-size:11px;color:var(--muted)">Actual: <span style="font-weight:700;color:${coll.cmtActual>coll.cmtTarget?'#e63946':'#2dc653'}">${fmt(coll.cmtActual)}</span></div>
+            <div style="background:#fff4e8;border-radius:10px;padding:10px 12px">
+              <div style="font-size:11px;font-weight:700;color:#f77f00;margin-bottom:6px">CMT</div>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="font-size:10px;color:var(--muted)">Target</span>
+                <span style="font-size:13px;font-weight:700;font-family:'DM Mono',monospace;color:#1a1d2e">${fmt(coll.cmtTarget)}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:3px">
+                <span style="font-size:10px;color:var(--muted)">Actual</span>
+                <span style="font-size:13px;font-weight:700;font-family:'DM Mono',monospace;color:${coll.cmtActual>coll.cmtTarget?'#e63946':'#2dc653'}">${fmt(coll.cmtActual)}</span>
+              </div>
             </div>
           </div>
         </div>
