@@ -309,7 +309,7 @@ async function loadOverview() {
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;padding:12px 20px;gap:10px;border-bottom:1px solid var(--border)">
           <div class="stat"><div class="stat-val" style="font-size:13px;color:${color}">${fmt(budget)}</div><div class="stat-label">Budget</div></div>
           <div class="stat"><div class="stat-val" style="font-size:13px;color:#2dc653">${fmt(actual)}</div><div class="stat-label">Actual</div></div>
-          <div class="stat"><div class="stat-val" style="font-size:13px;color:${varColor}">${variance>=0?'+':''}${fmt(variance)}</div><div class="stat-label">${variance>=0?'Under':'Over'}</div></div>
+          <div class="stat"><div class="stat-val" style="font-size:13px;color:${varColor}">${variance>=0?'+':''}${fmt(variance)}</div><div class="stat-label">Variance</div></div>
         </div>
         <div style="padding:10px 20px;border-bottom:1px solid var(--border)">
           <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">Collection</div>
