@@ -226,6 +226,40 @@ window.saveInstitute = async () => {
   await loadOverview();
 };
 
+function fmtShort(n) {
+  if (!n && n !== 0) return '—';
+  if (Math.abs(n) >= 1e7) return '₹' + (n/1e7).toFixed(1) + 'Cr';
+  if (Math.abs(n) >= 1e5) return '₹' + (n/1e5).toFixed(1) + 'L';
+  return '₹' + Number(n).toLocaleString('en-IN');
+}
+
+const branchDataCache = {};
+
+async function loadBranchData(instituteName, branches) {
+  const uncached = branches.filter(b => !branchDataCache[(instituteName||'')+'||'+b.name]);
+  if (uncached.length) {
+    const branchNames = uncached.map(b => b.name);
+    const [budgetRes, actualRes] = await Promise.all([
+      supabase.from('budget_data').select('institute_name,branch_name,value').eq('institute_name', instituteName).in('branch_name', branchNames),
+      supabase.from('actual_data').select('institute_name,branch_name,value').eq('institute_name', instituteName).in('branch_name', branchNames)
+    ]);
+    const budgetByKey = {};
+    (budgetRes.data || []).forEach(r => {
+      const k = (r.institute_name||'') + '||' + r.branch_name;
+      budgetByKey[k] = (budgetByKey[k]||0) + Number(r.value||0);
+    });
+    const actualByKey = {};
+    (actualRes.data || []).forEach(r => {
+      const k = (r.institute_name||'') + '||' + r.branch_name;
+      actualByKey[k] = (actualByKey[k]||0) + Number(r.value||0);
+    });
+    uncached.forEach(b => {
+      const k = (instituteName||'') + '||' + b.name;
+      branchDataCache[k] = { budget: budgetByKey[k]||0, actual: actualByKey[k]||0 };
+    });
+  }
+}
+
 async function loadOverview() {
   document.getElementById('instituteList').innerHTML = '<div style="text-align:center;padding:60px;color:var(--muted)">Loading…</div>';
   const [instRes, branchRes, deptRes] = await Promise.all([
@@ -233,6 +267,9 @@ async function loadOverview() {
     supabase.from('branches').select('institute_name,name,color').order('name'),
     supabase.from('departments').select('institute_name,branch_name')
   ]);
+
+  const budgetByKey = {};
+  const actualByKey = {};
 
   if (instRes.error) {
     instRes.data = [
@@ -279,6 +316,12 @@ async function loadOverview() {
     const branchCards = instBranches.map(b => {
       const k = (inst.name||'') + '||' + b.name;
       const deptCount = deptCountByKey[k] || 0;
+      const cached = branchDataCache[k] || {};
+      const budget = cached.budget || 0;
+      const actual = cached.actual || 0;
+      const variance = budget - actual;
+      const varColor = variance < 0 ? 'var(--red)' : variance > 0 ? 'var(--green)' : 'var(--muted)';
+      const varPrefix = variance > 0 ? '+' : '';
       return `
         <div class="branch-card" style="border-top:3px solid ${b.color}">
           <div class="branch-card-top">
@@ -287,7 +330,9 @@ async function loadOverview() {
             <button class="branch-del" onclick="deleteBranch('${inst.name.replace(/'/g,"\\'")}','${b.name.replace(/'/g,"\\'")}')">✕</button>
           </div>
           <div class="branch-stats">
-            <div class="stat"><div class="stat-val" style="color:var(--admin)">${deptCount}</div><div class="stat-label">Depts</div></div>
+            <div class="stat"><div class="stat-val" style="color:var(--admin);font-size:13px">${fmtShort(budget)}</div><div class="stat-label">Budget</div></div>
+            <div class="stat"><div class="stat-val" style="color:var(--text);font-size:13px">${fmtShort(actual)}</div><div class="stat-label">Actual</div></div>
+            <div class="stat"><div class="stat-val" style="color:${varColor};font-size:13px">${budget||actual ? varPrefix+fmtShort(variance) : '—'}</div><div class="stat-label">Variance</div></div>
           </div>
           <div class="branch-footer">
             <span style="font-size:11px;color:var(--muted)">${deptCount} dept${deptCount!==1?'s':''}</span>
@@ -313,11 +358,37 @@ async function loadOverview() {
   });
 }
 
-window.toggleInstitute = (name) => {
-  openInstitute = openInstitute === name ? '' : name;
-  // Update arrows and bodies without full reload
+window.toggleInstitute = async (name) => {
+  const wasOpen = openInstitute === name;
+  openInstitute = wasOpen ? '' : name;
+  if (!wasOpen) {
+    // Find branches for this institute and lazy-load their data
+    const instBlocks = [...document.querySelectorAll('.institute-block')];
+    const block = instBlocks.find(b => b.querySelector('.institute-name')?.textContent === name);
+    if (block) {
+      const branchNames = [...block.querySelectorAll('.branch-card-name')].map(el => el.textContent);
+      const branches = branchNames.map(n => ({ name: n }));
+      if (branches.length) {
+        await loadBranchData(name, branches);
+        // Update stat values in the already-rendered cards
+        block.querySelectorAll('.branch-card').forEach(card => {
+          const bName = card.querySelector('.branch-card-name').textContent;
+          const k = name + '||' + bName;
+          const cached = branchDataCache[k] || {};
+          const budget = cached.budget || 0;
+          const actual = cached.actual || 0;
+          const variance = budget - actual;
+          const varColor = variance < 0 ? 'var(--red)' : variance > 0 ? 'var(--green)' : 'var(--muted)';
+          const varPrefix = variance > 0 ? '+' : '';
+          const vals = card.querySelectorAll('.stat-val');
+          if (vals[0]) { vals[0].textContent = fmtShort(budget); vals[0].style.color = 'var(--admin)'; }
+          if (vals[1]) { vals[1].textContent = fmtShort(actual); vals[1].style.color = 'var(--text)'; }
+          if (vals[2]) { vals[2].textContent = budget||actual ? varPrefix+fmtShort(variance) : '—'; vals[2].style.color = varColor; }
+        });
+      }
+    }
+  }
   document.querySelectorAll('.institute-block').forEach(block => {
-    const header = block.querySelector('.institute-header');
     const arrow = block.querySelector('.institute-arrow');
     const body = block.querySelector('.institute-body');
     const instName = block.querySelector('.institute-name').textContent;
