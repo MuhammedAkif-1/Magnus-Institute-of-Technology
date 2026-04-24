@@ -259,7 +259,7 @@ async function loadOverview() {
     supabase.from('institutes').select('*').order('name'),
     supabase.from('branches').select('*').order('name'),
     supabase.from('departments').select('institute_name,branch_name,name'),
-    supabase.from('fields').select('institute_name,branch_name')
+    supabase.from('fields').select('institute_name,branch_name', { count: 'exact', head: false }).limit(5000)
   ]);
 
   if (instRes.error) {
@@ -402,11 +402,10 @@ window.deleteBranch = async (instituteName, branchName) => {
   loadOverview();
 };
 
-loadOverview();
-
-// Auto-open institute from URL param (e.g. coming back from admin.html)
+// Auto-open institute from URL param
 const _instParam = new URLSearchParams(window.location.search).get('institute');
 if (_instParam) openInstitute = _instParam;
+loadOverview();
 </script>
 </body>
 </html>
