@@ -530,7 +530,7 @@ _sbScript.textContent = `
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
   window.SB = createClient(
     'https://jcckxekjaetwoeilptse.supabase.co',
-    'sb_publishable_20hUKqtjjIPDgdAreDsBTQ_yalRVevL',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpjY2t4ZWtqYWV0d29laWxwdHNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5Njk3MzMsImV4cCI6MjA5MjU0NTczM30.8P32oelb13Bu9FBlWQXTIfeRS-KQtaX_J8lAvSlpmBk',
     { auth: { persistSession: true, storageKey: 'magnus-auth', storage: window.localStorage } }
   );
   const { data: { session } } = await SB.auth.getSession();
@@ -617,11 +617,16 @@ async function loadBranchFromDB(branch) {
 }
 
 async function saveValToDB(type, dept, key, period, val) {
-  if (!window.SB || !currentBranch) return;
+  if (!window.SB || !currentBranch) {
+    console.log('saveValToDB blocked:', { hasSB: !!window.SB, currentBranch, currentInstitute });
+    return;
+  }
   const table = type === 'budget' ? 'budget_data' : 'actual_data';
   const payload = { institute_name: currentInstitute, branch_name: currentBranch, dept_name: dept, field_key: key, period, value: val, updated_at: new Date().toISOString() };
+  console.log('Saving to', table, payload);
   const { error } = await SB.from(table).upsert(payload, { onConflict: 'institute_name,branch_name,dept_name,field_key,period' });
   if (error) console.error('saveValToDB error:', error.message);
+  else console.log('Saved successfully');
 }
 
 async function saveCollectionToDB(period, source, target, actual) {
