@@ -255,13 +255,11 @@ window.saveInstitute = async () => {
 };
 
 async function loadOverview() {
-  const [instRes, branchRes, deptRes, fieldRes, budgetRes, actualRes] = await Promise.all([
+  const [instRes, branchRes, deptRes, fieldRes] = await Promise.all([
     supabase.from('institutes').select('*').order('name'),
     supabase.from('branches').select('*').order('name'),
     supabase.from('departments').select('institute_name,branch_name,name'),
-    supabase.from('fields').select('institute_name,branch_name'),
-    supabase.from('budget_data').select('institute_name,branch_name,value').eq('period','monthly'),
-    supabase.from('actual_data').select('institute_name,branch_name,value').eq('period','monthly')
+    supabase.from('fields').select('institute_name,branch_name')
   ]);
 
   if (instRes.error) {
@@ -279,41 +277,16 @@ async function loadOverview() {
   const branches = branchRes.data || [];
   const depts = deptRes.data || [];
   const fields = fieldRes.data || [];
-  const budgets = budgetRes.data || [];
-  const actuals = actualRes.data || [];
 
-  // Group by institute+branch (primary key)
-  const deptsByKey = {}, fieldsByKey = {}, budgetByKey = {}, actualByKey = {};
-  // Also group by branch_name alone ONLY for rows where institute_name is null/empty
-  const deptsByBranch = {}, fieldsByBranch = {}, budgetByBranch = {}, actualByBranch = {};
-
+  const deptsByKey = {}, fieldsByKey = {};
   depts.forEach(d => {
-    const inst = d.institute_name || '';
-    const k = inst + '||' + d.branch_name;
+    const k = (d.institute_name||'') + '||' + d.branch_name;
     if (!deptsByKey[k]) deptsByKey[k] = [];
     deptsByKey[k].push(d);
-    if (!inst) {
-      if (!deptsByBranch[d.branch_name]) deptsByBranch[d.branch_name] = [];
-      deptsByBranch[d.branch_name].push(d);
-    }
   });
   fields.forEach(f => {
-    const inst = f.institute_name || '';
-    const k = inst + '||' + f.branch_name;
+    const k = (f.institute_name||'') + '||' + f.branch_name;
     fieldsByKey[k] = (fieldsByKey[k]||0) + 1;
-    if (!inst) fieldsByBranch[f.branch_name] = (fieldsByBranch[f.branch_name]||0) + 1;
-  });
-  budgets.forEach(r => {
-    const inst = r.institute_name || '';
-    const k = inst + '||' + r.branch_name;
-    budgetByKey[k] = (budgetByKey[k]||0) + Number(r.value);
-    if (!inst) budgetByBranch[r.branch_name] = (budgetByBranch[r.branch_name]||0) + Number(r.value);
-  });
-  actuals.forEach(r => {
-    const inst = r.institute_name || '';
-    const k = inst + '||' + r.branch_name;
-    actualByKey[k] = (actualByKey[k]||0) + Number(r.value);
-    if (!inst) actualByBranch[r.branch_name] = (actualByBranch[r.branch_name]||0) + Number(r.value);
   });
 
   const branchesByInstitute = {};
@@ -323,49 +296,24 @@ async function loadOverview() {
     branchesByInstitute[inst].push(b);
   });
 
-  const hasInstCol = branches.some(b => b.institute_name);
-  if (!hasInstCol && branches.length) {
-    Object.keys(branchesByInstitute).forEach(k => delete branchesByInstitute[k]);
-    const branchByName = {};
-    branches.forEach(b => { branchByName[b.name] = b; });
-    const INST_BRANCH_MAP = {
-      'Magnus Institute of Technology': ['Manjeri','Tirur','Kozhicode','Kannur','Kasaragod','Palakkad','Thrissur','Kollam','Attingal','Marthadam','Allappuzha','Kuttiyadi','Bangalore','Hyderabad'],
-      'Alims School of Business': ['Kozhikode','Ernakulam','Manjeri'],
-      'MEL Islamic School': ['Manjeri'],
-      'M&D Institute': ['Manjeri','Ernakulam'],
-      'Merchx': ['Manjeri'],
-      'Aider India': ['Manjeri']
-    };
-    Object.entries(INST_BRANCH_MAP).forEach(([inst, names]) => {
-      branchesByInstitute[inst] = names.map(n => branchByName[n] || { name: n, color: '#4361ee', institute_name: inst });
-    });
-  }
-
   const list = document.getElementById('instituteList');
   list.innerHTML = '';
 
   if (!institutes.length) {
-    list.innerHTML = '<div style="text-align:center;padding:60px;color:var(--muted);font-size:14px">No institutes found. Run schema.sql in Supabase to seed data.</div>';
+    list.innerHTML = '<div style="text-align:center;padding:60px;color:var(--muted);font-size:14px">No institutes found.</div>';
     return;
   }
-
-  // KPI totals
-  document.getElementById && console.log('institutes loaded:', institutes.length);
 
   institutes.forEach(inst => {
     const instBranches = branchesByInstitute[inst.name] || [];
     const isOpen = openInstitute === inst.name;
-
     const block = document.createElement('div');
     block.className = 'institute-block';
 
     const branchCards = instBranches.map(b => {
-      // Try institute-scoped key first, fall back to branch-only
-      const k = inst.name + '||' + b.name;
-      const deptList = deptsByKey[k] || deptsByBranch[b.name] || [];
-      const fieldCount = fieldsByKey[k] || fieldsByBranch[b.name] || 0;
-      const budget = budgetByKey[k] || budgetByBranch[b.name] || 0;
-      const actual = actualByKey[k] || actualByBranch[b.name] || 0;
+      const k = (inst.name||'') + '||' + b.name;
+      const deptList = deptsByKey[k] || [];
+      const fieldCount = fieldsByKey[k] || 0;
       return `
         <div class="branch-card" style="border-top:3px solid ${b.color}">
           <div class="branch-card-top">
@@ -375,8 +323,8 @@ async function loadOverview() {
           </div>
           <div class="branch-stats">
             <div class="stat"><div class="stat-val" style="color:var(--admin)">${deptList.length}</div><div class="stat-label">Depts</div></div>
-            <div class="stat"><div class="stat-val" style="color:${b.color};font-size:${budget?'12px':'17px'}">${budget ? fmt(budget) : '—'}</div><div class="stat-label">Budget</div></div>
-            <div class="stat"><div class="stat-val" style="color:${actual>0?(actual>budget&&budget?'var(--red)':'var(--green)'):'var(--muted)'};font-size:${actual?'12px':'17px'}">${actual ? fmt(actual) : '—'}</div><div class="stat-label">Actual</div></div>
+            <div class="stat"><div class="stat-val" style="color:var(--muted)">${fieldCount}</div><div class="stat-label">Fields</div></div>
+            <div class="stat"><div class="stat-val" style="color:var(--muted);font-size:13px">—</div><div class="stat-label">Budget</div></div>
           </div>
           <div class="branch-footer">
             <span style="font-size:11px;color:var(--muted)">${deptList.length} dept${deptList.length!==1?'s':''} · ${fieldCount} field${fieldCount!==1?'s':''}</span>
@@ -398,7 +346,6 @@ async function loadOverview() {
       <div class="institute-body ${isOpen?'open':''}">
         <div class="branches-grid">${branchCards}</div>
       </div>`;
-
     list.appendChild(block);
   });
 }
