@@ -561,16 +561,16 @@ window.addEventListener('sb-ready', async () => {
 async function loadBranchFromDB(branch) {
   if (!window.SB) return;
 
-  // Load departments
-  const { data: depts } = await SB.from('departments').select('name,color').eq('branch_name', branch);
+  const instFilter = q => currentInstitute ? q.eq('institute_name', currentInstitute) : q;
+
+  const { data: depts } = await instFilter(SB.from('departments').select('name,color').eq('branch_name', branch));
   if (depts && depts.length) {
     DEPTS.length = 0;
     Object.keys(DEPT_COLORS).forEach(k => delete DEPT_COLORS[k]);
     depts.forEach(d => { DEPTS.push(d.name); DEPT_COLORS[d.name] = d.color; });
   }
 
-  // Load fields
-  const { data: fields } = await SB.from('fields').select('dept_name,category,subcategory').eq('branch_name', branch).order('sort_order').order('id');
+  const { data: fields } = await instFilter(SB.from('fields').select('dept_name,category,subcategory').eq('branch_name', branch).order('sort_order').order('id'));
   if (fields && fields.length) {
     DEPTS.forEach(d => { ROWS[d] = []; });
     fields.forEach(f => {
@@ -582,21 +582,21 @@ async function loadBranchFromDB(branch) {
   store.budget = {}; store.actual = {};
   DEPTS.forEach(d => { store.budget[d] = {}; store.actual[d] = {}; });
 
-  const { data: budgets } = await SB.from('budget_data').select('dept_name,field_key,period,value').eq('branch_name', branch);
+  const { data: budgets } = await instFilter(SB.from('budget_data').select('dept_name,field_key,period,value').eq('branch_name', branch));
   (budgets||[]).forEach(r => {
     if (!store.budget[r.dept_name]) store.budget[r.dept_name] = {};
     if (!store.budget[r.dept_name][r.field_key]) store.budget[r.dept_name][r.field_key] = {monthly:0,w1:0,w2:0,w3:0,w4:0};
     store.budget[r.dept_name][r.field_key][r.period] = Number(r.value);
   });
 
-  const { data: actuals } = await SB.from('actual_data').select('dept_name,field_key,period,value').eq('branch_name', branch);
+  const { data: actuals } = await instFilter(SB.from('actual_data').select('dept_name,field_key,period,value').eq('branch_name', branch));
   (actuals||[]).forEach(r => {
     if (!store.actual[r.dept_name]) store.actual[r.dept_name] = {};
     if (!store.actual[r.dept_name][r.field_key]) store.actual[r.dept_name][r.field_key] = {monthly:0,w1:0,w2:0,w3:0,w4:0};
     store.actual[r.dept_name][r.field_key][r.period] = Number(r.value);
   });
 
-  const { data: coll } = await SB.from('collection_data').select('period,source,target,actual').eq('branch_name', branch);
+  const { data: coll } = await instFilter(SB.from('collection_data').select('period,source,target,actual').eq('branch_name', branch));
   (coll||[]).forEach(r => {
     if (store.collection[r.period]?.[r.source]) {
       store.collection[r.period][r.source].target = Number(r.target);
@@ -606,11 +606,12 @@ async function loadBranchFromDB(branch) {
 }
 
 async function saveValToDB(type, dept, key, period, val) {
-  if (!window.SB) { console.error('SB not ready'); return; }
-  if (!currentBranch) { console.error('no currentBranch'); return; }
+  if (!window.SB || !currentBranch) return;
   const table = type === 'budget' ? 'budget_data' : 'actual_data';
   const payload = { branch_name: currentBranch, dept_name: dept, field_key: key, period, value: val, updated_at: new Date().toISOString() };
-  const { error } = await SB.from(table).upsert(payload, { onConflict: 'branch_name,dept_name,field_key,period' });
+  if (currentInstitute) payload.institute_name = currentInstitute;
+  const conflict = currentInstitute ? 'institute_name,branch_name,dept_name,field_key,period' : 'branch_name,dept_name,field_key,period';
+  const { error } = await SB.from(table).upsert(payload, { onConflict: conflict });
   if (error) console.error('SAVE ERROR:', error.message);
   else showToast('Saved');
 }
@@ -618,17 +619,24 @@ async function saveValToDB(type, dept, key, period, val) {
 async function saveCollectionToDB(period, source, target, actual) {
   if (!window.SB) return;
   const payload = { branch_name: currentBranch, period, source, target, actual, updated_at: new Date().toISOString() };
-  await SB.from('collection_data').upsert(payload, { onConflict: 'branch_name,period,source' });
+  if (currentInstitute) payload.institute_name = currentInstitute;
+  const conflict = currentInstitute ? 'institute_name,branch_name,period,source' : 'branch_name,period,source';
+  await SB.from('collection_data').upsert(payload, { onConflict: conflict });
 }
 
 async function saveDeptToDB(dept, color) {
   if (!window.SB) return;
-  await SB.from('departments').upsert({ branch_name: currentBranch, name: dept, color }, { onConflict: 'branch_name,name' });
+  const payload = { branch_name: currentBranch, name: dept, color };
+  if (currentInstitute) payload.institute_name = currentInstitute;
+  const conflict = currentInstitute ? 'institute_name,branch_name,name' : 'branch_name,name';
+  await SB.from('departments').upsert(payload, { onConflict: conflict });
 }
 
 async function saveFieldToDB(dept, cat, sub) {
   if (!window.SB) return;
-  await SB.from('fields').insert({ branch_name: currentBranch, dept_name: dept, category: cat, subcategory: sub });
+  const payload = { branch_name: currentBranch, dept_name: dept, category: cat, subcategory: sub };
+  if (currentInstitute) payload.institute_name = currentInstitute;
+  await SB.from('fields').insert(payload);
 }
 
 // ============================================================
