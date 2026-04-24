@@ -120,9 +120,25 @@
       <div class="page-title">Institutes Overview</div>
       <div class="page-sub">Select an institute to view and manage its branches</div>
     </div>
+    <button onclick="openAddInstituteModal()" style="padding:8px 18px;border-radius:8px;border:none;background:var(--admin);color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">＋ Add Institute</button>
   </div>
   <div class="institute-list" id="instituteList">
     <div style="text-align:center;padding:60px;color:var(--muted)">Loading…</div>
+  </div>
+</div>
+
+<!-- Add Institute Modal -->
+<div class="modal-overlay" id="addInstituteModal" style="display:none" onclick="if(event.target===this)closeInstituteModal()">
+  <div class="modal">
+    <div class="modal-title">Add Institute</div>
+    <label class="modal-label">Institute Name</label>
+    <input class="modal-input" id="instituteNameInput" type="text" placeholder="e.g. New College" onkeydown="if(event.key==='Enter')saveInstitute()" />
+    <label class="modal-label">Color</label>
+    <div class="color-row" id="instColorSwatches"></div>
+    <div class="modal-footer">
+      <button class="modal-cancel" onclick="closeInstituteModal()">Cancel</button>
+      <button class="modal-save" onclick="saveInstitute()">Add Institute</button>
+    </div>
   </div>
 </div>
 
@@ -168,15 +184,75 @@ let openInstitute = '';
 function fmt(n) { if (!n && n !== 0) return '—'; return '₹' + Number(n).toLocaleString('en-IN'); }
 function showToast(msg) { const t = document.getElementById('toast'); t.textContent = '✓ ' + msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
 
-// Build color swatches
+// Build color swatches for branch modal
 const sc = document.getElementById('colorSwatches');
 PALETTE.forEach(c => {
   const s = document.createElement('div');
   s.className = 'color-swatch' + (c === selectedColor ? ' selected' : '');
   s.style.background = c;
-  s.onclick = () => { selectedColor = c; document.querySelectorAll('.color-swatch').forEach(sw => sw.classList.toggle('selected', sw.style.background === c)); };
+  s.onclick = () => { selectedColor = c; document.querySelectorAll('#colorSwatches .color-swatch').forEach(sw => sw.classList.toggle('selected', sw.style.background === c)); };
   sc.appendChild(s);
 });
+
+// Build color swatches for institute modal
+let instSelectedColor = PALETTE[0];
+const isc = document.getElementById('instColorSwatches');
+PALETTE.forEach(c => {
+  const s = document.createElement('div');
+  s.className = 'color-swatch' + (c === instSelectedColor ? ' selected' : '');
+  s.style.background = c;
+  s.onclick = () => { instSelectedColor = c; document.querySelectorAll('#instColorSwatches .color-swatch').forEach(sw => sw.classList.toggle('selected', sw.style.background === c)); };
+  isc.appendChild(s);
+});
+
+window.openAddInstituteModal = () => {
+  instSelectedColor = PALETTE[0];
+  document.getElementById('instituteNameInput').value = '';
+  document.querySelectorAll('#instColorSwatches .color-swatch').forEach((s,i) => s.classList.toggle('selected', i===0));
+  document.getElementById('addInstituteModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('instituteNameInput').focus(), 50);
+};
+window.closeInstituteModal = () => document.getElementById('addInstituteModal').style.display = 'none';
+window.saveInstitute = async () => {
+  const name = document.getElementById('instituteNameInput').value.trim();
+  if (!name) { alert('Enter an institute name.'); return; }
+  const { error } = await supabase.from('institutes').insert({ name, color: instSelectedColor });
+  if (error) { alert('Error: ' + error.message); return; }
+  closeInstituteModal();
+  showToast('Institute added');
+  loadOverview();
+};
+
+// Build color swatches for institute modal
+let instSelectedColor = PALETTE[0];
+const isc = document.getElementById('instColorSwatches');
+PALETTE.forEach(c => {
+  const s = document.createElement('div');
+  s.className = 'color-swatch' + (c === instSelectedColor ? ' selected' : '');
+  s.style.background = c;
+  s.onclick = () => { instSelectedColor = c; document.querySelectorAll('#instColorSwatches .color-swatch').forEach(sw => sw.classList.toggle('selected', sw.style.background === c)); };
+  isc.appendChild(s);
+});
+
+window.openAddInstituteModal = () => {
+  instSelectedColor = PALETTE[0];
+  document.getElementById('instituteNameInput').value = '';
+  document.querySelectorAll('#instColorSwatches .color-swatch').forEach((s,i) => s.classList.toggle('selected', i===0));
+  document.getElementById('addInstituteModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('instituteNameInput').focus(), 50);
+};
+
+window.closeInstituteModal = () => document.getElementById('addInstituteModal').style.display = 'none';
+
+window.saveInstitute = async () => {
+  const name = document.getElementById('instituteNameInput').value.trim();
+  if (!name) { alert('Enter an institute name.'); return; }
+  const { error } = await supabase.from('institutes').insert({ name, color: instSelectedColor });
+  if (error) { alert('Error: ' + error.message); return; }
+  closeInstituteModal();
+  showToast('Institute added');
+  loadOverview();
+};
 
 async function loadOverview() {
   // Load everything in parallel, gracefully handle missing tables
