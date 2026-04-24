@@ -714,11 +714,11 @@ async function loadBranchFromDB(branch) {
 
 async function saveValToDB(type, dept, key, period, val) {
   if (!window.SB) { console.error('SB not ready'); return; }
+  if (!currentBranch) { console.error('No branch selected'); return; }
   const table = type === 'budget' ? 'budget_data' : 'actual_data';
   const payload = { branch_name: currentBranch, dept_name: dept, field_key: key, period, value: val, updated_at: new Date().toISOString() };
-  console.log('saveValToDB:', table, payload);
   const { data, error } = await SB.from(table).upsert(payload, { onConflict: 'branch_name,dept_name,field_key,period' }).select();
-  console.log('result:', data, error);
+  if (error) console.error('saveValToDB error:', error.message, payload);
 }
 
 async function saveCollectionToDB(period, source, target, actual) {
