@@ -201,7 +201,10 @@ PALETTE.forEach(c => {
   const s = document.createElement('div');
   s.className = 'color-swatch' + (c === instSelectedColor ? ' selected' : '');
   s.style.background = c;
-  s.onclick = () => { instSelectedColor = c; document.querySelectorAll('#instColorSwatches .color-swatch').forEach(sw => sw.classList.toggle('selected', sw.style.background === c)); };
+  s.onclick = () => {
+    instSelectedColor = c;
+    document.querySelectorAll('#instColorSwatches .color-swatch').forEach(sw => sw.classList.toggle('selected', sw.style.background === c));
+  };
   isc.appendChild(s);
 });
 
@@ -213,37 +216,6 @@ window.openAddInstituteModal = () => {
   setTimeout(() => document.getElementById('instituteNameInput').focus(), 50);
 };
 window.closeInstituteModal = () => document.getElementById('addInstituteModal').style.display = 'none';
-window.saveInstitute = async () => {
-  const name = document.getElementById('instituteNameInput').value.trim();
-  if (!name) { alert('Enter an institute name.'); return; }
-  const { error } = await supabase.from('institutes').insert({ name, color: instSelectedColor });
-  if (error) { alert('Error: ' + error.message); return; }
-  closeInstituteModal();
-  showToast('Institute added');
-  loadOverview();
-};
-
-// Build color swatches for institute modal
-let instSelectedColor = PALETTE[0];
-const isc = document.getElementById('instColorSwatches');
-PALETTE.forEach(c => {
-  const s = document.createElement('div');
-  s.className = 'color-swatch' + (c === instSelectedColor ? ' selected' : '');
-  s.style.background = c;
-  s.onclick = () => { instSelectedColor = c; document.querySelectorAll('#instColorSwatches .color-swatch').forEach(sw => sw.classList.toggle('selected', sw.style.background === c)); };
-  isc.appendChild(s);
-});
-
-window.openAddInstituteModal = () => {
-  instSelectedColor = PALETTE[0];
-  document.getElementById('instituteNameInput').value = '';
-  document.querySelectorAll('#instColorSwatches .color-swatch').forEach((s,i) => s.classList.toggle('selected', i===0));
-  document.getElementById('addInstituteModal').style.display = 'flex';
-  setTimeout(() => document.getElementById('instituteNameInput').focus(), 50);
-};
-
-window.closeInstituteModal = () => document.getElementById('addInstituteModal').style.display = 'none';
-
 window.saveInstitute = async () => {
   const name = document.getElementById('instituteNameInput').value.trim();
   if (!name) { alert('Enter an institute name.'); return; }
@@ -256,8 +228,8 @@ window.saveInstitute = async () => {
 
 async function loadOverview() {
   const [instRes, branchRes, deptRes] = await Promise.all([
-    supabase.from('institutes').select('*').order('name'),
-    supabase.from('branches').select('*').order('name'),
+    supabase.from('institutes').select('name,color').order('name'),
+    supabase.from('branches').select('institute_name,name,color').order('name'),
     supabase.from('departments').select('institute_name,branch_name')
   ]);
 
