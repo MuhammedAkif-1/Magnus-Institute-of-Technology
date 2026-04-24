@@ -1483,7 +1483,7 @@ function saveRenameDept(){
 // ============================================================
 // DELETE DEPARTMENT
 // ============================================================
-function deleteDept(name){
+async function deleteDept(name){
   if(!confirm(`Delete department "${name}" and all its data?`)) return;
   const idx = DEPTS.indexOf(name);
   if(idx === -1) return;
@@ -1493,6 +1493,14 @@ function deleteDept(name){
   delete store.budget[name];
   delete store.actual[name];
   if(currentDept === name) currentDept = 'DASHBOARD';
+  if(window.SB) {
+    await Promise.all([
+      SB.from('departments').delete().eq('institute_name', currentInstitute).eq('branch_name', currentBranch).eq('name', name),
+      SB.from('fields').delete().eq('institute_name', currentInstitute).eq('branch_name', currentBranch).eq('dept_name', name),
+      SB.from('budget_data').delete().eq('institute_name', currentInstitute).eq('branch_name', currentBranch).eq('dept_name', name),
+      SB.from('actual_data').delete().eq('institute_name', currentInstitute).eq('branch_name', currentBranch).eq('dept_name', name),
+    ]);
+  }
   renderSidebar();
   selectDept(currentDept);
   showToast('Department deleted');

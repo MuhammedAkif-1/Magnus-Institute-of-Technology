@@ -223,10 +223,11 @@ window.saveInstitute = async () => {
   if (error) { alert('Error: ' + error.message); return; }
   closeInstituteModal();
   showToast('Institute added');
-  loadOverview();
+  await loadOverview();
 };
 
 async function loadOverview() {
+  document.getElementById('instituteList').innerHTML = '<div style="text-align:center;padding:60px;color:var(--muted)">Loading…</div>';
   const [instRes, branchRes, deptRes] = await Promise.all([
     supabase.from('institutes').select('name,color').order('name'),
     supabase.from('branches').select('institute_name,name,color').order('name'),
@@ -346,12 +347,12 @@ window.saveBranch = async () => {
   closeModal();
   showToast('Branch added');
   openInstitute = _addingToInstitute;
-  loadOverview();
+  await loadOverview();
 };
 
 window.deleteBranch = async (instituteName, branchName) => {
   if (!confirm(`Delete branch "${branchName}" from ${instituteName} and ALL its data?`)) return;
-  await Promise.all([
+  const results = await Promise.all([
     supabase.from('branches').delete().eq('institute_name', instituteName).eq('name', branchName),
     supabase.from('departments').delete().eq('institute_name', instituteName).eq('branch_name', branchName),
     supabase.from('fields').delete().eq('institute_name', instituteName).eq('branch_name', branchName),
@@ -359,9 +360,11 @@ window.deleteBranch = async (instituteName, branchName) => {
     supabase.from('actual_data').delete().eq('institute_name', instituteName).eq('branch_name', branchName),
     supabase.from('collection_data').delete().eq('institute_name', instituteName).eq('branch_name', branchName),
   ]);
+  const deleteError = results.find(r => r.error);
+  if (deleteError) { alert('Error deleting: ' + deleteError.error.message); return; }
   showToast('Branch deleted');
   openInstitute = instituteName;
-  loadOverview();
+  await loadOverview();
 };
 
 // Auto-open institute from URL param
