@@ -255,11 +255,10 @@ window.saveInstitute = async () => {
 };
 
 async function loadOverview() {
-  const [instRes, branchRes, deptRes, fieldRes] = await Promise.all([
+  const [instRes, branchRes, deptRes] = await Promise.all([
     supabase.from('institutes').select('*').order('name'),
     supabase.from('branches').select('*').order('name'),
-    supabase.from('departments').select('institute_name,branch_name,name'),
-    supabase.from('fields').select('institute_name,branch_name', { count: 'exact', head: false }).limit(5000)
+    supabase.from('departments').select('institute_name,branch_name')
   ]);
 
   if (instRes.error) {
@@ -276,17 +275,11 @@ async function loadOverview() {
   const institutes = instRes.data || [];
   const branches = branchRes.data || [];
   const depts = deptRes.data || [];
-  const fields = fieldRes.data || [];
 
-  const deptsByKey = {}, fieldsByKey = {};
+  const deptCountByKey = {};
   depts.forEach(d => {
     const k = (d.institute_name||'') + '||' + d.branch_name;
-    if (!deptsByKey[k]) deptsByKey[k] = [];
-    deptsByKey[k].push(d);
-  });
-  fields.forEach(f => {
-    const k = (f.institute_name||'') + '||' + f.branch_name;
-    fieldsByKey[k] = (fieldsByKey[k]||0) + 1;
+    deptCountByKey[k] = (deptCountByKey[k]||0) + 1;
   });
 
   const branchesByInstitute = {};
@@ -312,8 +305,7 @@ async function loadOverview() {
 
     const branchCards = instBranches.map(b => {
       const k = (inst.name||'') + '||' + b.name;
-      const deptList = deptsByKey[k] || [];
-      const fieldCount = fieldsByKey[k] || 0;
+      const deptCount = deptCountByKey[k] || 0;
       return `
         <div class="branch-card" style="border-top:3px solid ${b.color}">
           <div class="branch-card-top">
@@ -322,12 +314,10 @@ async function loadOverview() {
             <button class="branch-del" onclick="deleteBranch('${inst.name.replace(/'/g,"\\'")}','${b.name.replace(/'/g,"\\'")}')">✕</button>
           </div>
           <div class="branch-stats">
-            <div class="stat"><div class="stat-val" style="color:var(--admin)">${deptList.length}</div><div class="stat-label">Depts</div></div>
-            <div class="stat"><div class="stat-val" style="color:var(--muted)">${fieldCount}</div><div class="stat-label">Fields</div></div>
-            <div class="stat"><div class="stat-val" style="color:var(--muted);font-size:13px">—</div><div class="stat-label">Budget</div></div>
+            <div class="stat"><div class="stat-val" style="color:var(--admin)">${deptCount}</div><div class="stat-label">Depts</div></div>
           </div>
           <div class="branch-footer">
-            <span style="font-size:11px;color:var(--muted)">${deptList.length} dept${deptList.length!==1?'s':''} · ${fieldCount} field${fieldCount!==1?'s':''}</span>
+            <span style="font-size:11px;color:var(--muted)">${deptCount} dept${deptCount!==1?'s':''}</span>
             <a class="open-btn" href="admin.html?institute=${encodeURIComponent(inst.name)}&branch=${encodeURIComponent(b.name)}">Open →</a>
           </div>
         </div>`;
